@@ -11,13 +11,10 @@ public class SlotBehaviour : MonoBehaviour
 {
     [Header("Sprites")]
     [SerializeField] private Sprite[] myImages;  //images taken initially
-    [SerializeField] private Sprite[] miniSlotImages;
 
     [Header("Slot Images")]
     [SerializeField] private List<SlotImage> images;     //class to store total images
     [SerializeField] private List<SlotImage> Tempimages;     //class to store the result matrix
-    [SerializeField] private List<SlotImage> TotalMiniSlotImages;     //class to store total images
-    [SerializeField] private List<SlotImage> TempMiniSlotImages;     //class to store the result matrix
     [SerializeField] private List<BoxScript> TempBoxScripts;
     [SerializeField] private List<Sprite> Box_Sprites;
 
@@ -68,7 +65,6 @@ public class SlotBehaviour : MonoBehaviour
     [SerializeField] private PayoutCalculation PayCalculator;
 
     private List<Tweener> alltweens = new List<Tweener>();
-    private List<Tweener> singleSlotTweens = new List<Tweener>();
 
     private Tweener WinTween = null;
 
@@ -95,6 +91,8 @@ public class SlotBehaviour : MonoBehaviour
     protected int Lines = 20;
     [SerializeField] private int IconSizeFactor = 100;       //set this parameter according to the size of the icon and spacing
     private int numberOfSlots = 5;          //number of columns
+
+    private List<(Transform slotTransform, int originalSiblingIndex)> changedSlots = new();
 
 
     private void Start()
@@ -317,19 +315,74 @@ public class SlotBehaviour : MonoBehaviour
         {
             for(int j = 0; j < myImages.Length; j++)
             {
-                int randomIndex = UnityEngine.Random.Range(0, myImages.Length);
+                int randomIndex = UnityEngine.Random.Range(0, myImages.Length-8);
                 images[i].slotImages[j].sprite = myImages[randomIndex];
             }
         }
 
-        for(int i = 0; i < TotalMiniSlotImages.Count; i++)
+        //ReorderImages();
+    }
+
+    private void ReorderImages()
+    {
+        for (int i = 0; i < Tempimages.Count; i++)
         {
-            for(int j = 0;j < miniSlotImages.Length; j++)
+            for (int j = 0; j < 3; j++)
             {
-                int randomIndex = UnityEngine.Random.Range(0, miniSlotImages.Length);
-                TotalMiniSlotImages[i].slotImages[j].sprite = miniSlotImages[randomIndex];
+                if (Tempimages[i].slotImages[j].sprite == myImages[3])
+                {
+                    // Store the original sibling index before changing it
+                    Transform slotTransform = Tempimages[i].slotImages[j].transform;
+                    int originalSiblingIndex = slotTransform.GetSiblingIndex();
+
+                    // Add the slot transform and its original sibling index to the list
+                    changedSlots.Add((slotTransform, originalSiblingIndex));
+
+                    // Now apply the changes
+                    SetUpAccordingToCC(slotTransform);
+                }
             }
         }
+    }
+
+    private void SetUpAccordingToCC(Transform slotTransform)
+    {
+        slotTransform.SetSiblingIndex(24);
+
+        for (int i = 0; i < 2; i++)
+        {
+            var animation = slotTransform.GetChild(i).GetComponent<ImageAnimation>();
+            if (animation != null)
+            {
+                animation.AnimationSpeed = 15;  // Change animation speed
+                animation.StartAnimation();     // Start animation
+                slotTransform.GetChild(i).gameObject.SetActive(true);  // Activate the animation object
+            }
+        }
+    }
+
+    // Function to reset all changed slots
+    private void ResetImages()
+    {
+        foreach (var (slotTransform, originalSiblingIndex) in changedSlots)
+        {
+            // Reset the sibling index to the original value
+            slotTransform.SetSiblingIndex(originalSiblingIndex);
+
+            // Stop the animation and reset the state
+            for (int i = 0; i < 2; i++)
+            {
+                var animation = slotTransform.GetChild(i).GetComponent<ImageAnimation>();
+                if (animation != null)
+                {
+                    animation.StopAnimation();  // Assuming you have a StopAnimation method
+                    slotTransform.GetChild(i).gameObject.SetActive(false);  // Deactivate the animation object
+                }
+            }
+        }
+
+        // Clear the list after resetting everything
+        changedSlots.Clear();
     }
 
     internal void SetInitialUI()
@@ -395,7 +448,7 @@ public class SlotBehaviour : MonoBehaviour
         //WinningsAnim(false);
         if (SlotStart_Button) SlotStart_Button.interactable = false;
 
-        StopGameAnimation();
+        //StopGameAnimation(); //commented this line for testing
         
         //PayCalculator.ResetLines();
         tweenroutine = StartCoroutine(TweenRoutine(bonus));
@@ -418,15 +471,10 @@ public class SlotBehaviour : MonoBehaviour
         IsSpinning = true;
         //ToggleButtonGrp(false);
 
-        //for (int i = 0; i < numberOfSlots; i++) // Initialize tweening for slot animations
-        //{
-        //    InitializeTweening(Slot_Transform[i], bonus && i % 2 != 0);
-        //    //if (!bonus) yield return new WaitForSeconds(0.1f);
-        //}
-
-        for (int i = 0; i < MiniSlot_Transform.Length; i++) // Initialize tweening for slot animations
+        for (int i = 0; i < numberOfSlots; i++) // Initialize tweening for slot animations
         {
-            InitializeSingleSlotTweening(MiniSlot_Transform[i]);
+            InitializeTweening(Slot_Transform[i], bonus && i % 2 != 0);
+            //if (!bonus) yield return new WaitForSeconds(0.1f);
         }
 
         //if (!bonus) // Deduct balance if not a bonus
@@ -449,15 +497,12 @@ public class SlotBehaviour : MonoBehaviour
 
         yield return new WaitForSeconds(2f);
 
-        //for (int i = 0; i < numberOfSlots; i++) // Stop tweening for each slot
-        //{
-        //    yield return StopTweening(5, Slot_Transform[i], i);
-        //}
-
-        for (int i = 0; i < MiniSlot_Transform.Length; i++) // Stop tweening for each slot
+        for (int i = 0; i < numberOfSlots; i++) // Stop tweening for each slot
         {
-            yield return StopSingleSlotTweening(3, MiniSlot_Transform[i], i);
+            yield return StopTweening(5, Slot_Transform[i], i);
         }
+
+        
 
         yield return new WaitForSeconds(0.3f);
 
@@ -465,7 +510,11 @@ public class SlotBehaviour : MonoBehaviour
 
         KillAllTweens();
 
-        SlotStart_Button.interactable = true;
+        yield return new WaitForSeconds(2f);
+
+        //_bonusManager.StartBonus(); this is for testing purposes, remove 
+
+        SlotStart_Button.interactable = true; //this is for testing, remove this line 
 
         //if (SocketManager.playerdata.currentWining>0) WinningsTextAnimation(bonus); // Trigger winnings animation if applicable
 
@@ -888,42 +937,12 @@ public class SlotBehaviour : MonoBehaviour
         alltweens[index].Pause();
 
         int tweenpos = (reqpos * IconSizeFactor) - IconSizeFactor;
-        alltweens[index] = slotTransform.DOLocalMoveY(tweenpos, 0.5f).SetEase(Ease.OutQuad); //1789
+        alltweens[index] = slotTransform.DOLocalMoveY(tweenpos + 441.255f, 0.5f).SetEase(Ease.OutQuad); //1789
 
         if (audioController) audioController.PlayWLAudio("spinStop");
         yield return alltweens[index].WaitForCompletion();
         alltweens[index].Kill();
     }
-
-    private void InitializeSingleSlotTweening(Transform slotTransform, bool bonus = false)
-    {
-        Tweener tweener = null;
-
-        slotTransform.localPosition = new Vector2(slotTransform.localPosition.x, slotTransform.localPosition.y + 442);
-        tweener = slotTransform.DOLocalMoveY(-670, .3f).SetLoops(-1, LoopType.Restart).SetEase(Ease.Linear).SetDelay(0);
-
-        tweener.Play();
-        singleSlotTweens.Add(tweener);
-    }
-
-    private IEnumerator StopSingleSlotTweening(int reqpos, Transform slotTransform, int index, bool bonus = false)
-    {
-        bool IsRegister = false;
-        yield return singleSlotTweens[index].OnStepComplete(delegate { IsRegister = true; });
-        yield return new WaitUntil(() => IsRegister);
-
-        singleSlotTweens[index].Pause();
-
-        int tweenpos = (reqpos * IconSizeFactor) - IconSizeFactor;
-        singleSlotTweens[index] = slotTransform.DOLocalMoveY(tweenpos - 329.5f, 0.5f).SetEase(Ease.OutQuad); //1789
-
-        if (audioController) audioController.PlayWLAudio("spinStop");
-        yield return singleSlotTweens[index].WaitForCompletion();
-        singleSlotTweens[index].Kill();
-    }
-
-    
-
 
     private void KillAllTweens()
     {
@@ -934,15 +953,6 @@ public class SlotBehaviour : MonoBehaviour
                 alltweens[i].Kill();
             }
             alltweens.Clear();
-        }
-
-        if(singleSlotTweens.Count > 0)
-        {
-            for (int i = 0; i < singleSlotTweens.Count; i++)
-            {
-                singleSlotTweens[i].Kill();
-            }
-            singleSlotTweens.Clear();
         }
     }
     #endregion
