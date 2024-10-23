@@ -35,6 +35,11 @@ public class BonusController : MonoBehaviour
     [SerializeField] private List<SlotImage> TotalMiniSlotImages;     //class to store total images
     [SerializeField] private List<SlotImage> TempMiniSlotImages;     //class to store the result matrix
     [SerializeField] private Transform[] MiniSlot_Transform;
+
+
+    [Header("Animation Sprites")]
+    [SerializeField] private Sprite[] Be_Sprites, Co_Sprites, Ga_Sprites, Ho_Sprites, Os_Sprites, Rb_Sprites, Rn_Sprites, Diamond_Sprites, CC_Sprites, coin2_Sprites, coin3_Sprites, coin4_Sprites, coin5_Sprites, coin7_Sprites;
+
     private List<Tweener> singleSlotTweens = new List<Tweener>();
     private int IconSizeFactor = 202;
     private bool IsSpinning;

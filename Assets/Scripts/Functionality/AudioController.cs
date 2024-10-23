@@ -115,4 +115,20 @@ public class AudioController : MonoBehaviour
         }
     }
 
+    internal void OnVolumeChanged(float value, string type)
+    {
+        switch (type)
+        {
+            case "music":
+                bg_adudio.volume = value;
+                bg_audioBonus.volume = value;
+                break;
+            case "sound":
+                audioPlayer_button.volume = value;
+                audioPlayer_wl.volume = value;
+                audioSpin_button.volume = value;
+                audioPlayer_Bonus.volume = value;
+                break;
+        }
+    }
 }

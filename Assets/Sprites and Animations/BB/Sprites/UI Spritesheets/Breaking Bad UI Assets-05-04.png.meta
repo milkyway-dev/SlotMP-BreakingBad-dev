@@ -559,10 +559,10 @@ TextureImporter:
       name: Breaking Bad UI Assets-05-04_46
       rect:
         serializedVersion: 2
-        x: 647
-        y: 3109
-        width: 1453
-        height: 82
+        x: 655
+        y: 3131
+        width: 1418
+        height: 60
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -774,7 +774,7 @@ TextureImporter:
         width: 621
         height: 546
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []

@@ -41,6 +41,7 @@ public class ImageAnimation : MonoBehaviour
 		{
 			Instance = this;
 		}
+		//StartAnimation(); // for testing animation
     }
 
 	private void OnDisable()

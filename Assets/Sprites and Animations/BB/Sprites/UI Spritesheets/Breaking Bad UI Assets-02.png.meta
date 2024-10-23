@@ -72,7 +72,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 2
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -160,8 +160,8 @@ TextureImporter:
       name: Breaking Bad UI Assets-02_1
       rect:
         serializedVersion: 2
-        x: 926
-        y: 4145
+        x: 927
+        y: 4146
         width: 186
         height: 267
       alignment: 0
@@ -203,9 +203,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 926
-        y: 3713
-        width: 181
-        height: 275
+        y: 3726
+        width: 186
+        height: 267
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -435,8 +435,8 @@ TextureImporter:
         serializedVersion: 2
         x: 4554
         y: 567
-        width: 1042
-        height: 1012
+        width: 1038
+        height: 1007
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -475,10 +475,10 @@ TextureImporter:
       name: Breaking Bad UI Assets-02_56
       rect:
         serializedVersion: 2
-        x: 1741
-        y: 579
-        width: 1051
-        height: 985
+        x: 1750
+        y: 583
+        width: 1038
+        height: 983
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -498,8 +498,8 @@ TextureImporter:
         serializedVersion: 2
         x: 3192
         y: 551
-        width: 1033
-        height: 994
+        width: 1038
+        height: 1007
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -648,7 +648,7 @@ TextureImporter:
         width: 672
         height: 94
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -669,7 +669,7 @@ TextureImporter:
         width: 350
         height: 95
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -690,7 +690,7 @@ TextureImporter:
         width: 535
         height: 97
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []

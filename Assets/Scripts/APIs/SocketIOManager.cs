@@ -31,18 +31,18 @@ public class SocketIOManager : MonoBehaviour
     internal JSHandler _jsManager;
 
     protected string SocketURI = null;
-    //protected string TestSocketURI = "https://game-crm-rtp-backend.onrender.com/";
+    protected string TestSocketURI = "https://game-crm-rtp-backend.onrender.com/";
     //protected string TestSocketURI = "https://6f01c04j-5000.inc1.devtunnels.ms/";
     //protected string TestSocketURI = "https://7p68wzhv-5000.inc1.devtunnels.ms/"; //vikings
-    protected string TestSocketURI = "https://916smq0d-5001.inc1.devtunnels.ms/";
+    //protected string TestSocketURI = "https://916smq0d-5001.inc1.devtunnels.ms/";
     //protected string TestSocketURI = "https://jmn3wfcb-5000.inc1.devtunnels.ms/";
 
 
     [SerializeField]
     private string testToken;
 
-    protected string gameID = "SL-CLEO";
-    //protected string gameID = "";
+    //protected string gameID = "SL-CLEO";
+    protected string gameID = "";
 
     internal bool isLoaded = false;
 
@@ -311,7 +311,7 @@ public class SocketIOManager : MonoBehaviour
 
     private void PopulateSlotSocket(List<string> slotPop, List<string> LineIds)
     {
-        slotManager.shuffleInitialMatrix();
+        //slotManager.shuffleInitialMatrix();
 
         slotManager.SetInitialUI();
 
