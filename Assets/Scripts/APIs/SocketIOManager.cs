@@ -31,18 +31,18 @@ public class SocketIOManager : MonoBehaviour
     internal JSHandler _jsManager;
 
     protected string SocketURI = null;
-    protected string TestSocketURI = "https://game-crm-rtp-backend.onrender.com/";
+    //protected string TestSocketURI = "https://game-crm-rtp-backend.onrender.com/";
     //protected string TestSocketURI = "https://6f01c04j-5000.inc1.devtunnels.ms/";
     //protected string TestSocketURI = "https://7p68wzhv-5000.inc1.devtunnels.ms/"; //vikings
-    //protected string TestSocketURI = "https://916smq0d-5001.inc1.devtunnels.ms/";
+    protected string TestSocketURI = "https://916smq0d-5001.inc1.devtunnels.ms/";
     //protected string TestSocketURI = "https://jmn3wfcb-5000.inc1.devtunnels.ms/";
 
 
     [SerializeField]
     private string testToken;
 
-    //protected string gameID = "SL-CLEO";
-    protected string gameID = "";
+    protected string gameID = "SL-BB";
+    //protected string gameID = "";
 
     internal bool isLoaded = false;
 
@@ -269,10 +269,13 @@ public class SocketIOManager : MonoBehaviour
                     if (!SetInit)
                     {
                         //Debug.Log(jsonObject);
-                        List<string> LinesString = ConvertListListIntToListString(initialData.Lines);
-                        List<string> InitialReels = ConvertListOfListsToStrings(initialData.Reel);
-                        InitialReels = RemoveQuotes(InitialReels);
-                        PopulateSlotSocket(InitialReels, LinesString);
+                        //List<string> LinesString = ConvertListListIntToListString(initialData.Lines);
+                        //List<string> InitialReels = ConvertListOfListsToStrings(initialData.Reel);
+                        //InitialReels = RemoveQuotes(InitialReels);
+                        //PopulateSlotSocket(InitialReels, LinesString);
+
+                        slotManager.shuffleInitialMatrix();
+                        slotManager.SetInitialUI();
                         SetInit = true;
                     }
                     else
@@ -455,11 +458,40 @@ public class GameData
     public List<List<string>> symbolsToEmit { get; set; }
     public double WinAmout { get; set; }
     public FreeSpins freeSpins { get; set; }
+    public WinData winData { get; set; }
     public List<string> FinalsymbolsToEmit { get; set; }
     public List<string> FinalResultReel { get; set; }
     public double jackpot { get; set; }
     public bool isBonus { get; set; }
     public double BonusStopIndex { get; set; }
+}
+
+[System.Serializable]
+public class WinData
+{
+    public List<CoinValues> coinValues; 
+    public List<LosPollos> losPollos;
+}
+
+[System.Serializable]
+public class LosPollos
+{
+    public List<int> index;  
+    public int value;
+}
+
+[System.Serializable]
+public class CoinValues
+{
+    public List<int> index; 
+    public int value;
+}
+
+[Serializable]
+public class SpecialSymbols
+{
+    public int count { get; set; }
+    public bool isNewAdded { get; set; }
 }
 
 [Serializable]

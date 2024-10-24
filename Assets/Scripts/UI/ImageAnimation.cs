@@ -24,6 +24,8 @@ public class ImageAnimation : MonoBehaviour
 	public float AnimationSpeed = 5f;
 	public float delayBetweenLoop;
 
+	internal bool isAnim = false;
+
     private void OnValidate()
     {
 		rendererDelegate = GetComponent<Image>();
