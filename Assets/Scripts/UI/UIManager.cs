@@ -398,6 +398,17 @@ public class UIManager : MonoBehaviour
         PopulateSymbolsPayout(symbolsText);
     }
 
+    internal IEnumerator MidGameImageAnimation(ImageAnimation imageAnimation)
+    {
+        imageAnimation.transform.parent.GetChild(0).gameObject.SetActive(true);
+        imageAnimation.gameObject.SetActive(true);
+        imageAnimation.StartAnimation();
+        yield return new WaitUntil(() => imageAnimation.rendererDelegate.sprite == imageAnimation.textureArray[imageAnimation.textureArray.Count - 1]);
+        imageAnimation.transform.parent.GetChild(0).gameObject.SetActive(false);
+        imageAnimation.StopAnimation();
+        imageAnimation.gameObject.SetActive(false);
+    }
+
     private void PopulateSymbolsPayout(Paylines paylines)
     {
         for (int i = 0; i < SymbolsText.Count; i++)

@@ -18,8 +18,8 @@ public class SocketIOManager : MonoBehaviour
 
     internal GameData initialData = null;
     internal UIData initUIData = null;
-    internal GameData resultData = null;
-    internal PlayerData playerdata = null;
+    [SerializeField] internal GameData resultData = null;
+    [SerializeField] internal PlayerData playerdata = null;
     [SerializeField] internal List<string> bonusdata = null;
     internal bool isResultdone = false;
     internal List<List<int>> LineData = null;
@@ -34,8 +34,8 @@ public class SocketIOManager : MonoBehaviour
     //protected string TestSocketURI = "https://game-crm-rtp-backend.onrender.com/";
     //protected string TestSocketURI = "https://6f01c04j-5000.inc1.devtunnels.ms/";
     //protected string TestSocketURI = "https://7p68wzhv-5000.inc1.devtunnels.ms/"; //vikings
-    protected string TestSocketURI = "https://916smq0d-5001.inc1.devtunnels.ms/";
-    //protected string TestSocketURI = "https://jmn3wfcb-5000.inc1.devtunnels.ms/";
+    //protected string TestSocketURI = "https://916smq0d-5001.inc1.devtunnels.ms/";
+    protected string TestSocketURI = "https://c4xfw9cd-5002.inc1.devtunnels.ms/";
 
 
     [SerializeField]
@@ -462,8 +462,23 @@ public class GameData
     public List<string> FinalsymbolsToEmit { get; set; }
     public List<string> FinalResultReel { get; set; }
     public double jackpot { get; set; }
+    public Bonus bonus { get; set; }
     public bool isBonus { get; set; }
     public double BonusStopIndex { get; set; }
+}
+
+[Serializable]
+public class Bonus
+{
+    public bool isBonus { get; set; }
+    public List<List<int>> BonusResult { get; set; } // Result of bonus symbols
+    public double payout { get; set; }
+    public int spinCount { get; set; }
+    public bool isWalterStash { get; set; }
+    public double walterStashPayout { get; set; }
+    public bool isGrandPrize { get; set; }
+    public double grandPrizePayout { get; set; }
+    public List<List<int>> freezeIndices { get; set; }
 }
 
 [System.Serializable]
