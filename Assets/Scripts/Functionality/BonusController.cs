@@ -11,18 +11,6 @@ public class BonusController : MonoBehaviour
     [SerializeField] private SlotBehaviour slotManager;
     [SerializeField] private SocketIOManager SocketManager;
     [SerializeField] private AudioController audioController;
-    [SerializeField] private ImageAnimation BonusOpen_ImageAnimation;
-    [SerializeField] private ImageAnimation BonusClose_ImageAnimation;
-    [SerializeField] private ImageAnimation BonusInBonus_ImageAnimation;
-    [SerializeField] private GameObject BonusGame_Panel;
-    [SerializeField] private GameObject BonusOpeningUI;
-    [SerializeField] private GameObject BonusClosingUI;
-    [SerializeField] private GameObject BonusInBonusUI;
-    [SerializeField] private TMP_Text FSnum_Text;
-    [SerializeField] private TMP_Text BonusOpeningText;
-    [SerializeField] private TMP_Text BonusClosingText;
-    [SerializeField] private TMP_Text BonusInBonusText;
-    [SerializeField] private TMP_Text BonusWinningsText;
 
     [SerializeField] private CanvasGroup NormalSlot_CG;
     [SerializeField] private CanvasGroup BonusSlot_CG;
@@ -37,17 +25,37 @@ public class BonusController : MonoBehaviour
     [SerializeField] private Sprite[] index9Sprites;
     [SerializeField] private Sprite[] losPollos;
     [SerializeField] private Sprite coinFrame;
+    [SerializeField] private Sprite CC_Sprite;
 
     [SerializeField] private List<SlotImage> TotalMiniSlotImages;     //class to store total images
     [SerializeField] private List<SlotImage> TempMiniSlotImages;     //class to store the result matrix
     [SerializeField] private Transform[] MiniSlot_Transform;
 
     [SerializeField] public List<SlotTransform> Slot;
+    [SerializeField] public List<SlotTrailRenderer> TrailRenderers;
+
+    [SerializeField] private TMP_Text BonusWinnings_Text;
+
+    [SerializeField] private Transform WinningsPosition;
 
     [SerializeField] private StaticSymbolController staticSymbol;
+    [SerializeField] private GameObject BonusWinningsUI_Panel;
+    [SerializeField] private GameObject lines, lineBet, totalBet;
 
-    [Header("Animation Sprites")]
-    [SerializeField] private Sprite[] Be_Sprites, Co_Sprites, Ga_Sprites, Ho_Sprites, Os_Sprites, Rb_Sprites, Rn_Sprites, Diamond_Sprites, CC_Sprites, coin2_Sprites, coin3_Sprites, coin4_Sprites, coin5_Sprites, coin7_Sprites;
+    [SerializeField] private Sprite[] Be_Sprites;
+    [SerializeField] private Sprite[] Co_Sprites;
+    [SerializeField] private Sprite[] Ga_Sprites;
+    [SerializeField] private Sprite[] Ho_Sprites;
+    [SerializeField] private Sprite[] Os_Sprites;
+    [SerializeField] private Sprite[] Rb_Sprites;
+    [SerializeField] private Sprite[] Rn_Sprites;
+    [SerializeField] private Sprite[] Diamond_Sprites;
+    [SerializeField] private Sprite[] CC_Sprites;
+    [SerializeField] private Sprite[] coin2_Sprites;
+    [SerializeField] private Sprite[] coin3_Sprites;
+    [SerializeField] private Sprite[] coin4_Sprites;
+    [SerializeField] private Sprite[] coin5_Sprites;
+    [SerializeField] private Sprite[] coin7_Sprites;
 
     private List<KeyValuePair<Transform, Tweener>> singleSlotTweens = new List<KeyValuePair<Transform, Tweener>>();
 
@@ -79,22 +87,23 @@ public class BonusController : MonoBehaviour
     {
         if(NormalSlotStart_Button && BonusSlotStart_Button && AutoSpin_Button) //Manage Button CLick here maybe set interactable = false, and turn off autospin button  
         {
+            lineBet.SetActive(false);
+            lines.SetActive(false);
+            totalBet.SetActive(false);
             NormalSlotStart_Button.gameObject.SetActive(false);
             AutoSpin_Button.gameObject.SetActive(false);
+            BonusSlotStart_Button.interactable = false;
+            BonusSlotStart_Button.gameObject.SetActive(true);
             BonusSpinCounter_Text.text = count.ToString();
+            BonusWinningsUI_Panel.SetActive(true);
         }
 
-        DOTween.To(() => NormalSlot_CG.alpha, (val) => NormalSlot_CG.alpha = val, 0, .5f).OnComplete(()=>
-        {
-            NormalSlot_CG.interactable = false;
-            NormalSlot_CG.blocksRaycasts = false;
-        });
+        DOTween.To(() => NormalSlot_CG.alpha, (val) => NormalSlot_CG.alpha = val, 0, .5f);
+        
 
         DOTween.To(() => BonusSlot_CG.alpha, (val) => BonusSlot_CG.alpha = val, 1, .5f).OnComplete(() =>
         {
-            BonusSlot_CG.interactable = true;
-            BonusSlot_CG.blocksRaycasts = true;
-            BonusSlotStart_Button.gameObject.SetActive(true);
+            StartCoroutine(staticSymbol.ChangeLinkToGoldCoin(BonusSlotStart_Button));
         });
     }
 
@@ -151,11 +160,20 @@ public class BonusController : MonoBehaviour
                 else if(SocketManager.resultData.bonus.BonusResult[j][i] == 14)
                 {
                     //run a loop to find the value of the coin and set the coin and its text
-                    Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = coinFrame;
+                    foreach (var coins in SocketManager.resultData.winData.coinValues)
+                    {
+                        if (coins.index[0] == j && coins.index[1] == i)
+                        {
+                            Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = coinFrame;
+                            Slot[j].slotTransforms[i].GetChild(3).GetChild(0).gameObject.SetActive(true);
+                            Slot[j].slotTransforms[i].GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = coins.value.ToString("f2");
+                            break;
+                        }
+                    }
                 }
                 else if(SocketManager.resultData.bonus.BonusResult[j][i] == 13)
                 {
-                    Debug.Log("Frozen index CC");
+                    Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = CC_Sprite;
                 }
             }
         } 
@@ -185,35 +203,81 @@ public class BonusController : MonoBehaviour
 
         KillAllTweens();
 
+        staticSymbol.GenerateFreezeMatrix(SocketManager.resultData.bonus.freezeIndices);
+
+        if(SocketManager.resultData.bonus.isWalterStash || SocketManager.resultData.jackpot>0)
+        {
+            yield return new WaitForSeconds(2f);
+
+            for(int i = 0; i < Slot.Count; i++)
+            {
+                for(int j = 0; j < Slot[i].slotTransforms.Count; j++)
+                {
+                    if(Slot[i].slotTransforms[j].GetChild(3).GetComponent<Image>().sprite == coinFrame)
+                    {
+                        TrailRenderer trail = Slot[i].slotTransforms[j].GetChild(3).GetChild(1).GetComponent<TrailRenderer>();
+                        Slot[i].slotTransforms[j].GetChild(3).GetChild(1).gameObject.SetActive(true);
+                        Vector3 tempPosi = trail.transform.position;
+                        yield return trail.transform.DOMove(WinningsPosition.position, .5f).OnComplete(()=>
+                        {
+                            Debug.Log("Here");
+                            trail.gameObject.SetActive(false);
+                            trail.transform.position = tempPosi;
+
+                            int currWin = 0;
+                            int coin = 0;
+                            try
+                            {
+                                currWin = int.Parse(BonusWinnings_Text.text);
+                                coin = int.Parse(Slot[i].slotTransforms[j].GetChild(3).GetChild(0).GetComponent<TMP_Text>().text.Split('.')[0]);
+                            }
+                            catch
+                            {
+                                Debug.Log("Caught conversion error");
+                            }
+
+                            currWin += coin;
+                            BonusWinnings_Text.text = currWin.ToString();
+                        });
+                        yield return new WaitForSeconds(1f);
+                    }
+                }
+            }
+
+            yield return
+
+            IsSpinning = false;
+            EndBonus();
+        }
+
+        if (SocketManager.resultData.bonus.freeSpinAdded)
+        {
+            BonusSpinCounter_Text.text = "3";
+        }
+
         yield return new WaitForSeconds(2f);
 
-        //if(no more spins left start end bonus)
-        //EndBonus();
-
-        IsSpinning = false;
         BonusSlotStart_Button.interactable = true;
+        IsSpinning = false;
     }
 
 
     private void EndBonus()
     {
-        if (NormalSlotStart_Button && BonusSlotStart_Button) //Manage Button CLick here maybe set interactable = false, and turn off autospin button  
-        {
-            NormalSlotStart_Button.gameObject.SetActive(true);
-            BonusSlotStart_Button.gameObject.SetActive(false);
-            BonusSlotStart_Button.interactable = true;
-        }
+        BonusWinningsUI_Panel.SetActive(false);
+        staticSymbol.Reset();
 
-        DOTween.To(() => BonusSlot_CG.alpha, (val) => BonusSlot_CG.alpha = val, 0, .5f).OnComplete(() =>
-        {
-            BonusSlot_CG.interactable = false;
-            BonusSlot_CG.blocksRaycasts = false;
-        });
-
+        DOTween.To(() => BonusSlot_CG.alpha, (val) => BonusSlot_CG.alpha = val, 0, .5f);
+        
         DOTween.To(() => NormalSlot_CG.alpha, (val) => NormalSlot_CG.alpha = val, 1, .5f).OnComplete(() =>
         {
-            NormalSlot_CG.interactable = true;
-            NormalSlot_CG.blocksRaycasts = true;
+            BonusSlotStart_Button.gameObject.SetActive(false);
+            BonusSlotStart_Button.interactable = false;
+            lineBet.SetActive(true);
+            lines.SetActive(true);
+            totalBet.SetActive(true);
+            NormalSlotStart_Button.gameObject.SetActive(true);
+            NormalSlotStart_Button.interactable = true;
         });
     }
 
@@ -273,88 +337,17 @@ public class BonusController : MonoBehaviour
             }
             singleSlotTweens.Clear();
         }
-    }
-
-    private IEnumerator BonusGameStartRoutine(int spins)
-    {
-        audioController.SwitchBGSound(true);
-        if (BonusOpen_ImageAnimation) BonusOpen_ImageAnimation.StartAnimation();
-
-        slotManager.StopGameAnimation();
-
-        yield return new WaitUntil(() => BonusOpen_ImageAnimation.rendererDelegate.sprite == BonusOpen_ImageAnimation.textureArray[16]);
-
-        BonusOpen_ImageAnimation.PauseAnimation();
-        BonusOpeningUI.SetActive(true);
-        yield return new WaitForSeconds(2f);
-        BonusOpeningUI.SetActive(false);
-        BonusOpen_ImageAnimation.ResumeAnimation();
-
-        yield return new WaitUntil(() => BonusOpen_ImageAnimation.rendererDelegate.sprite == BonusOpen_ImageAnimation.textureArray[BonusOpen_ImageAnimation.textureArray.Count-1]);
-        BonusOpen_ImageAnimation.StopAnimation();
-
-        yield return new WaitForSeconds(1f);
-
-        slotManager.FreeSpin(spins);
-    }
-
-    internal IEnumerator BonusInBonus()
-    {
-        BonusInBonus_ImageAnimation.StartAnimation();
-
-        yield return new WaitUntil(() => BonusInBonus_ImageAnimation.rendererDelegate.sprite == BonusInBonus_ImageAnimation.textureArray[5]);
-
-        BonusInBonus_ImageAnimation.PauseAnimation();
-
-        int currFS = 0;
-        int.TryParse(FSnum_Text.text, out currFS);
-        Debug.Log("Current Spins: " + currFS.ToString());
-        FSnum_Text.text = SocketManager.resultData.freeSpins.count.ToString();
-        Debug.Log("Total Spins now: " + FSnum_Text.text);
-        print("Free Spins Added: " + (SocketManager.resultData.freeSpins.count - currFS).ToString());
-        BonusInBonusText.text = (SocketManager.resultData.freeSpins.count-currFS).ToString() + " FREE SPINS";
-
-        BonusInBonusUI.SetActive(true);
-        yield return new WaitForSeconds(2f);
-        BonusInBonusUI.SetActive(false);
-        BonusInBonus_ImageAnimation.ResumeAnimation();
-
-        yield return new WaitUntil(() => BonusInBonus_ImageAnimation.rendererDelegate.sprite == BonusInBonus_ImageAnimation.textureArray[BonusInBonus_ImageAnimation.textureArray.Count-1]);
-        BonusInBonus_ImageAnimation.StopAnimation();
-
-        yield return new WaitForSeconds(1f);
-
-        slotManager.FreeSpin(SocketManager.resultData.freeSpins.count);
-    }
-
-    internal IEnumerator BonusGameEndRoutine()
-    {
-        if (BonusClosingText) BonusClosingText.text = BonusWinningsText.text;
-        BonusClose_ImageAnimation.StartAnimation();
-
-        double.TryParse(BonusClosingText.text, out double totalWin);
-        if (totalWin > 0)
-        {
-            yield return new WaitUntil(() => BonusClose_ImageAnimation.rendererDelegate.sprite == BonusClose_ImageAnimation.textureArray[6]);
-
-            BonusClose_ImageAnimation.PauseAnimation();
-            BonusClosingUI.SetActive(true);
-            yield return new WaitForSeconds(3f);
-            BonusClosingUI.SetActive(false);
-            BonusClose_ImageAnimation.ResumeAnimation();
-        }
-        slotManager.StopGameAnimation();
-        yield return new WaitUntil(()=> BonusClose_ImageAnimation.rendererDelegate.sprite == BonusClose_ImageAnimation.textureArray[BonusClose_ImageAnimation.textureArray.Count-1]);
-        BonusClose_ImageAnimation.StopAnimation();
-        audioController.SwitchBGSound(false);
-
-        if (BonusGame_Panel) BonusGame_Panel.SetActive(false);
-        BonusWinningsText.text = "0";
-    }
+    }   
 }
 
 [System.Serializable]
 public class SlotTransform
 {
     public List<Transform> slotTransforms = new List<Transform>();
+}
+
+[System.Serializable]
+public class SlotTrailRenderer
+{
+    public List<TrailRenderer> trailRenderers = new List<TrailRenderer>();
 }

@@ -256,7 +256,7 @@ public class SlotBehaviour : MonoBehaviour
         }
         ToggleButtonGrp(true);
         IsFreeSpin = false;
-        StartCoroutine(_bonusManager.BonusGameEndRoutine());
+        //StartCoroutine(_bonusManager.BonusGameEndRoutine());
     }
     #endregion
 
@@ -655,7 +655,7 @@ public class SlotBehaviour : MonoBehaviour
                     {
                         foreach(var coins in SocketManager.resultData.winData.coinValues)
                         {
-                            if(coins.index[0] == j && coins.index[i] == i)
+                            if(coins.index[0] == j && coins.index[1] == i)
                             {
                                 images[i].slotImages[images[i].slotImages.Count - 5 + j].sprite = myImages[resultnum[i]];
                                 PopulateAnimationSprites(images[i].slotImages[images[i].slotImages.Count - 5 + j].gameObject.GetComponent<ImageAnimation>(), resultnum[i], 0, coins.value.ToString("f2"));
@@ -690,9 +690,9 @@ public class SlotBehaviour : MonoBehaviour
         if (SocketManager.playerdata.currentWining > 0) WinningsTextAnimation(bonus); // Trigger winnings animation if applicable
 
 
-        yield return new WaitForSeconds(0.3f);
-
         CheckPayoutLineBackend(SocketManager.resultData.linesToEmit, SocketManager.resultData.FinalsymbolsToEmit, SocketManager.resultData.jackpot);
+
+        yield return new WaitForSeconds(1f);
 
         yield return new WaitUntil(() => WinAnimationFin);
 
@@ -712,11 +712,11 @@ public class SlotBehaviour : MonoBehaviour
 
         //}
 
-        ToggleButtonGrp(true);
-
         KillAllTweens();
 
-        yield return new WaitForSeconds(2f);
+        ToggleButtonGrp(true);
+
+        //yield return new WaitForSeconds(2f);
 
         
         //_bonusManager.StartBonus(); this is for testing purposes, remove 
@@ -1003,13 +1003,14 @@ public class SlotBehaviour : MonoBehaviour
 
     private IEnumerator BoxRoutine(List<int> LineIDs)
     {
-        yield return new WaitForSeconds(3f);
+        WinAnimationFin = false;
+
+        yield return new WaitForSeconds(2f);
 
         TurnOnBlackBoxes();
 
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(2f);
 
-        WinAnimationFin = false;
         while (true)
         {
             for (int i = 0; i < LineIDs.Count; i++)
@@ -1023,16 +1024,18 @@ public class SlotBehaviour : MonoBehaviour
                     }
                 }
 
-                yield return new WaitForSeconds(2f);
+                yield return new WaitForSeconds(1.5f);
 
                 TurnOnBlackBoxes();
 
                 if (LineIDs.Count < 2)
                 {
-                    yield return new WaitForSeconds(2f);
+                    yield return new WaitForSeconds(1.5f);
                     if (!WinAnimationFin) WinAnimationFin = true;
                 }
+
                 if(!WinAnimationFin) WinAnimationFin = true;
+                yield return new WaitForSeconds(1.5f);
             }
         }
     }

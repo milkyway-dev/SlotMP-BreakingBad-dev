@@ -474,6 +474,7 @@ public class Bonus
     public List<List<int>> BonusResult { get; set; } // Result of bonus symbols
     public double payout { get; set; }
     public int spinCount { get; set; }
+    public bool freeSpinAdded { get; set; }
     public bool isWalterStash { get; set; }
     public double walterStashPayout { get; set; }
     public bool isGrandPrize { get; set; }
