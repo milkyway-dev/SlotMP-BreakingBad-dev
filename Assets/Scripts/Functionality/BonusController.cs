@@ -8,10 +8,20 @@ using System.Linq;
 
 public class BonusController : MonoBehaviour
 {
+    [Header("Scripts References")]
     [SerializeField] private SlotBehaviour slotManager;
     [SerializeField] private SocketIOManager SocketManager;
     [SerializeField] private AudioController audioController;
+    [SerializeField] private UIManager uiManager;
+    [SerializeField] private StaticSymbolController staticSymbol;
 
+    [Header("Sprites References")]
+    [SerializeField] private Sprite[] index9Sprites;
+    //[SerializeField] private Sprite[] losPollos;
+    [SerializeField] private Sprite coinFrame;
+    [SerializeField] private Sprite CC_Sprite;
+
+    [Header("UI Objects References")]
     [SerializeField] private CanvasGroup NormalSlot_CG;
     [SerializeField] private CanvasGroup BonusSlot_CG;
 
@@ -20,49 +30,20 @@ public class BonusController : MonoBehaviour
     [SerializeField] private Button AutoSpin_Button;
 
     [SerializeField] private TMP_Text BonusSpinCounter_Text;
-
-    [SerializeField] private Sprite[] miniSlotImages;
-    [SerializeField] private Sprite[] index9Sprites;
-    [SerializeField] private Sprite[] losPollos;
-    [SerializeField] private Sprite coinFrame;
-    [SerializeField] private Sprite CC_Sprite;
-
-    [SerializeField] private List<SlotImage> TotalMiniSlotImages;     //class to store total images
-    [SerializeField] private List<SlotImage> TempMiniSlotImages;     //class to store the result matrix
-    [SerializeField] private Transform[] MiniSlot_Transform;
-
-    [SerializeField] public List<SlotTransform> Slot;
-    [SerializeField] public List<SlotTrailRenderer> TrailRenderers;
-
     [SerializeField] private TMP_Text BonusWinnings_Text;
 
     [SerializeField] private Transform WinningsPosition;
-
-    [SerializeField] private StaticSymbolController staticSymbol;
     [SerializeField] private GameObject BonusWinningsUI_Panel;
+    [SerializeField] private GameObject FreeSpinsCounterUI_Panel;
     [SerializeField] private GameObject lines, lineBet, totalBet;
 
-    [SerializeField] private Sprite[] Be_Sprites;
-    [SerializeField] private Sprite[] Co_Sprites;
-    [SerializeField] private Sprite[] Ga_Sprites;
-    [SerializeField] private Sprite[] Ho_Sprites;
-    [SerializeField] private Sprite[] Os_Sprites;
-    [SerializeField] private Sprite[] Rb_Sprites;
-    [SerializeField] private Sprite[] Rn_Sprites;
-    [SerializeField] private Sprite[] Diamond_Sprites;
-    [SerializeField] private Sprite[] CC_Sprites;
-    [SerializeField] private Sprite[] coin2_Sprites;
-    [SerializeField] private Sprite[] coin3_Sprites;
-    [SerializeField] private Sprite[] coin4_Sprites;
-    [SerializeField] private Sprite[] coin5_Sprites;
-    [SerializeField] private Sprite[] coin7_Sprites;
+    [Header("Slot References")]
+    [SerializeField] private List<SlotImage> TotalMiniSlotImages;     //class to store total images
+    [SerializeField] public List<SlotTransform> Slot;
 
     private List<KeyValuePair<Transform, Tweener>> singleSlotTweens = new List<KeyValuePair<Transform, Tweener>>();
-
-
     private int IconSizeFactor = 202;
     private bool IsSpinning;
-
 
     private void Start()
     {
@@ -85,30 +66,23 @@ public class BonusController : MonoBehaviour
 
     internal void StartBonus(int count)
     {
-        if(NormalSlotStart_Button && BonusSlotStart_Button && AutoSpin_Button) //Manage Button CLick here maybe set interactable = false, and turn off autospin button  
-        {
-            lineBet.SetActive(false);
-            lines.SetActive(false);
-            totalBet.SetActive(false);
-            NormalSlotStart_Button.gameObject.SetActive(false);
-            AutoSpin_Button.gameObject.SetActive(false);
-            BonusSlotStart_Button.interactable = false;
-            BonusSlotStart_Button.gameObject.SetActive(true);
-            BonusSpinCounter_Text.text = count.ToString();
-            BonusWinningsUI_Panel.SetActive(true);
-        }
+        lineBet.SetActive(false);
+        lines.SetActive(false);
+        totalBet.SetActive(false);
+        NormalSlotStart_Button.gameObject.SetActive(false);
+        AutoSpin_Button.gameObject.SetActive(false);
+        BonusSlotStart_Button.interactable = false;
+        BonusSlotStart_Button.gameObject.SetActive(true);
+        BonusSpinCounter_Text.text = count.ToString();
+        BonusWinningsUI_Panel.SetActive(true);
 
         DOTween.To(() => NormalSlot_CG.alpha, (val) => NormalSlot_CG.alpha = val, 0, .5f);
-        
-
+      
         DOTween.To(() => BonusSlot_CG.alpha, (val) => BonusSlot_CG.alpha = val, 1, .5f).OnComplete(() =>
         {
             StartCoroutine(staticSymbol.ChangeLinkToGoldCoin(BonusSlotStart_Button));
         });
     }
-
-
-
 
     private void StartBonusSlot()
     {
@@ -244,7 +218,9 @@ public class BonusController : MonoBehaviour
                 }
             }
 
-            yield return
+            uiManager.PopulateWin(3);
+
+            yield return new WaitForSeconds(5f);
 
             IsSpinning = false;
             EndBonus();
@@ -261,7 +237,6 @@ public class BonusController : MonoBehaviour
         IsSpinning = false;
     }
 
-
     private void EndBonus()
     {
         BonusWinningsUI_Panel.SetActive(false);
@@ -273,14 +248,21 @@ public class BonusController : MonoBehaviour
         {
             BonusSlotStart_Button.gameObject.SetActive(false);
             BonusSlotStart_Button.interactable = false;
-            lineBet.SetActive(true);
-            lines.SetActive(true);
-            totalBet.SetActive(true);
+            if (SocketManager.resultData.freeSpins.count <= 0)
+            {
+                lineBet.SetActive(true);
+                lines.SetActive(true);
+                totalBet.SetActive(true);
+            }
+            else
+            {
+                FreeSpinsCounterUI_Panel.SetActive(true);
+            }
+            AutoSpin_Button.gameObject.SetActive(true);
             NormalSlotStart_Button.gameObject.SetActive(true);
             NormalSlotStart_Button.interactable = true;
         });
     }
-
 
     private void InitializeSingleSlotTweening(Transform slotTransform, bool bonus = false)
     {
@@ -344,10 +326,4 @@ public class BonusController : MonoBehaviour
 public class SlotTransform
 {
     public List<Transform> slotTransforms = new List<Transform>();
-}
-
-[System.Serializable]
-public class SlotTrailRenderer
-{
-    public List<TrailRenderer> trailRenderers = new List<TrailRenderer>();
 }

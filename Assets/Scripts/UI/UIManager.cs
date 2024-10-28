@@ -8,17 +8,20 @@ using UnityEngine.Networking;
 
 public class UIManager : MonoBehaviour
 {
+    [Header("Script References")]
+    [SerializeField] private AudioController audioController;
+    [SerializeField] private SlotBehaviour slotManager;
+    [SerializeField] private SocketIOManager socketManager;
+
     [Header("Popus UI")]
     [SerializeField] private GameObject MainPopup_Object;
 
     [Header("Win Popup")]
-    [SerializeField] private Image Win_Image;
     [SerializeField] private GameObject WinPopup_Object;
+    [SerializeField] private ImageAnimation Winnings_ImageAnimation;
+    [SerializeField] private RectTransform WinTextBgImage;
     [SerializeField] private TMP_Text Win_Text;
-    [SerializeField] private RectTransform WinBgAnimation;
-    [SerializeField] private Sprite BigWin_Sprite, HugeWin_Sprite, MegaWin_Sprite, Jackpot_Sprite;
-    [SerializeField] private ImageAnimation JackpotImageAnimation;
-    private Tween ImageRotationTween;
+    [SerializeField] private Sprite[] BigWin_Sprites, MegaWin_Sprites, BonusWinnings_Sprites;
 
     [Header("Disconnection Popup")]
     [SerializeField] private Button CloseDisconnect_Button;
@@ -28,8 +31,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject ADPopup_Object;
 
     [Header("LowBalance Popup")]
-    [SerializeField] private Button LBExit_Button;
     [SerializeField] private GameObject LBPopup_Object;
+    [SerializeField] private Button LBExit_Button;
 
     [Header("Audio Objects")]
     [SerializeField] private GameObject Settings_Object;
@@ -49,11 +52,14 @@ public class UIManager : MonoBehaviour
     [SerializeField] private List<GameObject> GameRulesPages = new();
     private int PageIndex;
 
+    [Header("Paytable Slot Text")]
+    [SerializeField] private List<TMP_Text> SymbolsText = new();
+
     [Header("Game Quit Objects")]
+    [SerializeField] private GameObject QuitMenuObject;
     [SerializeField] private Button Quit_Button;
     [SerializeField] private Button QuitYes_Button;
     [SerializeField] private Button QuitNo_Button;
-    [SerializeField] private GameObject QuitMenuObject;
 
     [Header("Menu Objects")]
     [SerializeField] private Button Menu_Button;
@@ -62,14 +68,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private RectTransform Info_BttnTransform;
     [SerializeField] private RectTransform Settings_BttnTransform;
 
-    [Header("Paytable Slot Text")]
-    [SerializeField] private List<TMP_Text> SymbolsText = new();
-
-    [SerializeField] private AudioController audioController;
-
-    [SerializeField] private SlotBehaviour slotManager;
-
-    [SerializeField] private SocketIOManager socketManager;
 
     private bool isMusic = true;
     private bool isSound = true;
@@ -230,54 +228,6 @@ public class UIManager : MonoBehaviour
         audioController.OnVolumeChanged(value, "music");
     }
 
-    private void SoundOnOFF(bool state)
-    {
-        //if (state)
-        //{
-        //    isSound = true;
-        //    audioController.ToggleMute(!state, "sound");
-        //    RectTransform soundTransform = Sound_Button.GetComponent<RectTransform>();
-        //    DOTween.To(() => soundTransform.anchoredPosition, (val) => soundTransform.anchoredPosition = val, new Vector2(soundTransform.anchoredPosition.x + 95, soundTransform.anchoredPosition.y), 0.1f).OnUpdate(() =>
-        //    {
-        //        LayoutRebuilder.ForceRebuildLayoutImmediate(Info_BttnTransform);
-        //    });
-        //}
-        //else
-        //{
-        //    isSound = false;
-        //    audioController.ToggleMute(!state, "sound");
-        //    RectTransform soundTransform = Sound_Button.GetComponent<RectTransform>();
-        //    DOTween.To(() => soundTransform.anchoredPosition, (val) => soundTransform.anchoredPosition = val, new Vector2(soundTransform.anchoredPosition.x - 95, soundTransform.anchoredPosition.y), 0.1f).OnUpdate(() =>
-        //    {
-        //        LayoutRebuilder.ForceRebuildLayoutImmediate(Info_BttnTransform);
-        //    });
-        //}
-    }
-
-    private void MusicONOFF(bool state)
-    {
-        //if (state)
-        //{
-        //    isMusic = true;
-        //    audioController.ToggleMute(!state, "music");
-        //    RectTransform musicTransform = Music_Button.GetComponent<RectTransform>();
-        //    DOTween.To(() => musicTransform.anchoredPosition, (val) => musicTransform.anchoredPosition = val, new Vector2(musicTransform.anchoredPosition.x + 95, musicTransform.anchoredPosition.y), 0.1f).OnUpdate(() =>
-        //    {
-        //        LayoutRebuilder.ForceRebuildLayoutImmediate(Info_BttnTransform);
-        //    });
-        //}
-        //else
-        //{
-        //    isMusic = false;
-        //    audioController.ToggleMute(!state, "music");
-        //    RectTransform musicTransform = Music_Button.GetComponent<RectTransform>();
-        //    DOTween.To(() => musicTransform.anchoredPosition, (val) => musicTransform.anchoredPosition = val, new Vector2(musicTransform.anchoredPosition.x - 95, musicTransform.anchoredPosition.y), 0.1f).OnUpdate(() =>
-        //    {
-        //        LayoutRebuilder.ForceRebuildLayoutImmediate(Info_BttnTransform);
-        //    });
-        //}
-    }
-
     private void OpenSettingsPanel()
     {
         if (audioController) audioController.PlayButtonAudio();
@@ -336,31 +286,31 @@ public class UIManager : MonoBehaviour
         switch (value)
         {
             case 1:
-                if (Win_Image) Win_Image.sprite = BigWin_Sprite;
+                foreach(Sprite s in BigWin_Sprites)
+                {
+                    Winnings_ImageAnimation.textureArray.Add(s);
+                }
                 break;
             case 2:
-                if (Win_Image) Win_Image.sprite = HugeWin_Sprite;
+                foreach (Sprite s in MegaWin_Sprites)
+                {
+                    Winnings_ImageAnimation.textureArray.Add(s);
+                }
                 break;
             case 3:
-                if (Win_Image) Win_Image.sprite = MegaWin_Sprite;
+                foreach(Sprite s in BonusWinnings_Sprites)
+                {
+                    Winnings_ImageAnimation.textureArray.Add(s);
+                }
                 break;
             case 4:
-                if (Win_Image) Win_Image.sprite = Jackpot_Sprite;
-                JackpotImageAnimation.StartAnimation();
+                //if (Win_Image) Win_Image.sprite = Jackpot_Sprite;
+                //JackpotImageAnimation.StartAnimation();
                 break;
         }
 
         StartPopupAnim();
     }
-
-    //private void Update()
-    //{
-    //    if (Input.GetKeyDown(KeyCode.Space))
-    //    {
-    //        PopulateWin(4);
-    //        Debug.Log("Called");
-    //    }
-    //}
 
     private void StartPopupAnim()
     {
@@ -369,21 +319,16 @@ public class UIManager : MonoBehaviour
 
         audioController.PlayWLAudio("bigwin");
 
-        Win_Image.rectTransform.DOScale(new Vector3(1, 1, 1), .5f).SetEase(Ease.OutCirc);
-
-        ImageRotationTween = WinBgAnimation.DORotate(new Vector3(0, 0, 360), 2f, RotateMode.FastBeyond360)
-            .SetEase(Ease.Linear) // Make the rotation constant
-            .SetLoops(-1, LoopType.Incremental); // Rotate infinitely in an incremental way
-
-        WinBgAnimation.DOScale(Vector3.one, .6f).SetEase(Ease.OutCirc);
+        Winnings_ImageAnimation.StartAnimation();
+        WinTextBgImage.DOScale(Vector3.one, .5f).SetEase(Ease.OutCirc);
 
         DOVirtual.DelayedCall(3f, () =>
         {
-            Win_Image.rectTransform.DOScale(Vector3.zero, .5f).SetEase(Ease.InBack).OnComplete(() => ClosePopup(WinPopup_Object));
-
-            WinBgAnimation.DOScale(Vector3.zero, .5f).SetEase(Ease.InBack).OnComplete(()=> ImageRotationTween.Kill());
-
-            slotManager.CheckPopups = false;
+            ClosePopup(WinPopup_Object);
+            Winnings_ImageAnimation.StopAnimation();
+            WinTextBgImage.DOScale(Vector3.zero, .5f).SetEase(Ease.InBack).OnComplete(() => {
+                slotManager.CheckPopups = false;
+            });
         });
     }
 

@@ -6,14 +6,20 @@ using UnityEngine.UI;
 
 public class StaticSymbolController : MonoBehaviour
 {
+    [Header("Scripts References")]
     [SerializeField] private SocketIOManager socketManager;
     [SerializeField] private SlotBehaviour slotManager;
+
+    [Header("Slots Reference")]
     [SerializeField] public List<SlotImage> Slot;
+
+    [Header("Sprites References")]
     [SerializeField] private Sprite[] images;
 
+    [Header("Animation Sprites References")]
     [SerializeField] private Sprite[] LinkToGoldCoin_Animation;
     
-    [SerializeField] internal List<Column> freezedLocations = new();
+    internal List<Column> freezedLocations = new();
 
     internal List<List<int>> GenerateFreezeMatrix(List<List<int>> loc, bool dontReturn= false)
     {
