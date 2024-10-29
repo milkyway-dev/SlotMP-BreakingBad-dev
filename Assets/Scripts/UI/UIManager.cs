@@ -68,6 +68,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private RectTransform Info_BttnTransform;
     [SerializeField] private RectTransform Settings_BttnTransform;
 
+    [Header("MidGame UI Text Objects")]
+    [SerializeField] private TMP_Text FreeSpinsText;
+    [SerializeField] private TMP_Text BonusGameWinningsText;
 
     private bool isMusic = true;
     private bool isSound = true;
@@ -297,16 +300,10 @@ public class UIManager : MonoBehaviour
                     Winnings_ImageAnimation.textureArray.Add(s);
                 }
                 break;
-            case 3:
-                foreach(Sprite s in BonusWinnings_Sprites)
-                {
-                    Winnings_ImageAnimation.textureArray.Add(s);
-                }
-                break;
-            case 4:
-                //if (Win_Image) Win_Image.sprite = Jackpot_Sprite;
-                //JackpotImageAnimation.StartAnimation();
-                break;
+            // case 4:
+            //     if (Win_Image) Win_Image.sprite = Jackpot_Sprite;
+            //     JackpotImageAnimation.StartAnimation();
+            //     break;
         }
 
         StartPopupAnim();
@@ -343,13 +340,45 @@ public class UIManager : MonoBehaviour
         PopulateSymbolsPayout(symbolsText);
     }
 
-    internal IEnumerator MidGameImageAnimation(ImageAnimation imageAnimation)
+    internal IEnumerator MidGameImageAnimation(ImageAnimation imageAnimation, int num = 0)
     {
-        imageAnimation.transform.parent.GetChild(0).gameObject.SetActive(true);
+        imageAnimation.transform.parent.gameObject.SetActive(true);
         imageAnimation.gameObject.SetActive(true);
         imageAnimation.StartAnimation();
+        yield return new WaitUntil(() => imageAnimation.rendererDelegate.sprite == imageAnimation.textureArray[imageAnimation.textureArray.Count - 2]);
+
+        if (imageAnimation.name == "FreeSpinsImageAnimation")
+        {
+            imageAnimation.PauseAnimation();
+            FreeSpinsText.color=new Color(FreeSpinsText.color.r, FreeSpinsText.color.g, FreeSpinsText.color.b, 0);
+            FreeSpinsText.DOFade(1, 0.5f);
+
+            int start = 0;
+            yield return DOTween.To(()=> start, (val)=> start = val, num, 1f).OnUpdate(()=>{
+                FreeSpinsText.text = start.ToString();
+            });
+
+            yield return new WaitForSeconds(3f);
+            FreeSpinsText.DOFade(0, 0.5f);
+            imageAnimation.ResumeAnimation();
+        }
+        else if(imageAnimation.name == "BonusWonImageAnimation"){
+            imageAnimation.PauseAnimation();
+            BonusGameWinningsText.color=new Color(BonusGameWinningsText.color.r, BonusGameWinningsText.color.g, BonusGameWinningsText.color.b, 0);
+            BonusGameWinningsText.DOFade(1, 0.5f);
+
+            int start = 0;
+            yield return DOTween.To(()=> start, (val)=> start = val, num, 1f).OnUpdate(()=>{
+                BonusGameWinningsText.text = start.ToString();
+            });
+
+            yield return new WaitForSeconds(3f);
+            BonusGameWinningsText.DOFade(0, 0.5f);
+            imageAnimation.ResumeAnimation();
+        }
+
         yield return new WaitUntil(() => imageAnimation.rendererDelegate.sprite == imageAnimation.textureArray[imageAnimation.textureArray.Count - 1]);
-        imageAnimation.transform.parent.GetChild(0).gameObject.SetActive(false);
+        imageAnimation.transform.parent.gameObject.SetActive(false);
         imageAnimation.StopAnimation();
         imageAnimation.gameObject.SetActive(false);
     }

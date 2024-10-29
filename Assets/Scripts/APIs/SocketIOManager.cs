@@ -53,10 +53,8 @@ public class SocketIOManager : MonoBehaviour
 
     private void Awake()
     {
-        //Debug.unityLogger.logEnabled = false;
         isLoaded = false;
         SetInit = false;
-
     }
 
     private void Start()

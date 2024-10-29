@@ -19,6 +19,9 @@ public class SlotBehaviour : MonoBehaviour
     [Header("Sprites References")]
     [SerializeField] private Sprite[] myImages;  //images taken initially
     [SerializeField] private Sprite[] losPollosSprites;
+    [SerializeField] private Sprite[] losPollosNumberSprites;
+    [SerializeField] private Sprite losPollosNoNumberSprite;
+
 
     [Header("Slot References")]
     [SerializeField] private List<SlotImage> images;     //class to store total images
@@ -52,6 +55,7 @@ public class SlotBehaviour : MonoBehaviour
     [SerializeField] private GameObject LinesUI;
     [SerializeField] private GameObject TotalBetUI;
     [SerializeField] private GameObject LineBetUI;
+    [SerializeField] private RectTransform FreeSpinCountUIPositon;
 
     [Header("Animation Sprites References")]
     [SerializeField] private Sprite[] B_Sprites;
@@ -86,7 +90,7 @@ public class SlotBehaviour : MonoBehaviour
     internal bool CheckPopups = false;
 
     private Coroutine AutoSpinRoutine = null;
-    private Coroutine FreeSpinRoutine = null;
+    private Coroutine FreeSpinRoutine = null; //CAN BE REMOVED
     private Coroutine tweenroutine;
     private Coroutine LineAnimRoutine = null;
 
@@ -192,13 +196,6 @@ public class SlotBehaviour : MonoBehaviour
         if (currentBalance < currentTotalBet)
         {
             uiManager.LowBalPopup();
-            if (AutoSpin_Button) AutoSpin_Button.interactable = false;
-            if (SlotStart_Button) SlotStart_Button.interactable = false;
-        }
-        else
-        {
-            if (AutoSpin_Button) AutoSpin_Button.interactable = true;
-            if (SlotStart_Button) SlotStart_Button.interactable = true;
         }
     }
 
@@ -328,6 +325,7 @@ public class SlotBehaviour : MonoBehaviour
     {
         animScript.textureArray.Clear();
         animScript.textureArray.TrimExcess();
+        animScript.doLoopAnimation=true;
         switch (val)
         {
             case 0:
@@ -646,8 +644,7 @@ public class SlotBehaviour : MonoBehaviour
         {
             if (IsFreeSpin)
             {
-                freeSpinsCount = SocketManager.resultData.freeSpins.count;
-                FSnum_text.text = freeSpinsCount.ToString();
+                yield return StartCoroutine(FreeSpinsSymbolAnimation());
             }
             else
             {
@@ -660,7 +657,9 @@ public class SlotBehaviour : MonoBehaviour
                 }
                 StopGameAnimation();
                 yield return StartCoroutine(uiManager.MidGameImageAnimation(FreeGamesImageAnimation));
-                OpenFreeSpinsUI(freeSpinsCount);
+                OpenFreeSpinsUI();
+                yield return new WaitForSeconds(1f); //can be removed
+                yield return StartCoroutine(FreeSpinsSymbolAnimation());
             }
         }
 
@@ -709,9 +708,37 @@ public class SlotBehaviour : MonoBehaviour
         }
     }
 
-    private void OpenFreeSpinsUI(int spinsLeft)
+    private IEnumerator FreeSpinsSymbolAnimation(){
+        for(int i=0;i<ResultMatrix.Count;i++){
+            foreach(Image slot in ResultMatrix[i].slotImages){
+                // foreach(Sprite s in losPollosSprites){
+                //     if(s!=null && s==slot.sprite){
+                //         ImageAnimation anim = slot.GetComponent<ImageAnimation>();
+                //         anim.doLoopAnimation = false;
+                //         anim.StartAnimation();
+                //         yield return null;
+                //     }
+                // }
+                for(int j=0;j<losPollosSprites.Count();j++){
+                    if(losPollosSprites[j]!=null && losPollosSprites[j] == slot.sprite){
+                        slot.transform.GetChild(4).GetComponent<Image>().sprite=losPollosNumberSprites[j];
+                        slot.transform.GetChild(4).gameObject.SetActive(true);
+                        slot.sprite=losPollosNoNumberSprite;
+
+                        Vector3 tempPosi=slot.transform.GetChild(4).position;
+                        yield return slot.transform.GetChild(4).DOLocalMove(FreeSpinCountUIPositon.position, 1.5f);
+                        slot.transform.GetChild(4).gameObject.SetActive(false);
+                        
+                        yield return new WaitForSeconds(1f);
+                    }
+                }
+            }
+        }
+    }
+
+    private void OpenFreeSpinsUI()
     {
-        FSnum_text.text = spinsLeft.ToString();
+        FSnum_text.text = "0";
         FreeSpinsUI_Panel.SetActive(true);
         LinesUI.SetActive(false);
         TotalBetUI.SetActive(false);
@@ -728,90 +755,26 @@ public class SlotBehaviour : MonoBehaviour
 
     private void WinningsTextAnimation()
     {
-        double winAmt = 0;
-        double currentWin = 0;
-
-        double currentBal = 0;
-        double Balance = 0;
-
-        //double BonusWinAmt = 0;
-        //double currentBonusWinnings = 0;
-
-        //if (bonus)
-        //{
-        //    try
-        //    {
-        //        BonusWinAmt = double.Parse(SocketManager.playerdata.currentWining.ToString("f2"));
-        //        currentBonusWinnings = double.Parse(BonusWin_Text.text);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Debug.Log("Error while conversion " + e.Message);
-        //    }
-        //}
-        try
-        {
-            winAmt = double.Parse(SocketManager.playerdata.currentWining.ToString("f2"));
+        if(!double.TryParse(SocketManager.playerdata.currentWining.ToString("f2"),out double winAmt)){
+            Debug.LogError("Error while conversion current winnings: " + SocketManager.playerdata.currentWining.ToString("f2"));
         }
-        catch (Exception e)
-        {
-            Debug.Log("Error while conversion " + e.Message);
+        if(!double.TryParse(Balance_text.text, out double currentBal)){
+            Debug.LogError("Error while converting string to double in current balance: " + Balance_text.text);
         }
-
-        try
-        {
-            currentBal = double.Parse(Balance_text.text);
+        if(!double.TryParse(SocketManager.playerdata.Balance.ToString("f2"), out double Balance)){
+            Debug.LogError("Error while converting string to double in new balance: " + SocketManager.playerdata.Balance.ToString("f2"));
         }
-        catch (Exception e)
-        {
-            Debug.Log("Error while conversion " + e.Message);
+        if(!double.TryParse(TotalWin_text.text, out double currentWin)){
+            Debug.LogError("Error while converting string to double in Totalwin:" + TotalWin_text.text);
         }
-
-        try
+        DOTween.To(() => currentWin, (val) => currentWin = val, winAmt, 0.8f).OnUpdate(() =>
         {
-            Balance = double.Parse(SocketManager.playerdata.Balance.ToString("f2"));
-        }
-        catch (Exception e)
+            if (TotalWin_text) TotalWin_text.text = currentWin.ToString("f2");
+        });
+        DOTween.To(() => currentBal, (val) => currentBal = val, Balance, 0.8f).OnUpdate(() =>
         {
-            Debug.Log("Error while conversion " + e.Message);
-        }
-
-        try
-        {
-            currentWin = double.Parse(TotalWin_text.text);
-        }
-        catch (Exception e)
-        {
-            Debug.Log("Error while conversion " + e.Message);
-        }
-
-        //if (bonus)
-        //{
-        //    double CurrTotal = BonusWinAmt + currentBonusWinnings;
-        //    DOTween.To(() => currentBonusWinnings, (val) => currentBonusWinnings = val, CurrTotal, 0.8f).OnUpdate(() =>
-        //    {
-        //        if (BonusWin_Text) BonusWin_Text.text = currentBonusWinnings.ToString("f2");
-        //    });
-
-        //    double start = 0;
-        //    DOTween.To(() => start, (val) => start = val, BonusWinAmt, 0.8f).OnUpdate(() =>
-        //    {
-        //        if (BigWin_Text) BigWin_Text.text = start.ToString("f2");
-        //    });
-        //}
-        //else
-        //{
-        //}
-            DOTween.To(() => currentWin, (val) => currentWin = val, winAmt, 0.8f).OnUpdate(() =>
-            {
-                if (TotalWin_text) TotalWin_text.text = currentWin.ToString("f2");
-                if (BigWin_Text) BigWin_Text.text = currentWin.ToString("f2");
-            });
-
-            DOTween.To(() => currentBal, (val) => currentBal = val, Balance, 0.8f).OnUpdate(() =>
-            {
-                if (Balance_text) Balance_text.text = currentBal.ToString("f2");
-            });
+            if (Balance_text) Balance_text.text = currentBal.ToString("f2");
+        });
     }
 
     private void BalanceDeduction()

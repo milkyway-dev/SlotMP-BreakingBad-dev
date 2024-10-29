@@ -14,6 +14,7 @@ public class BonusController : MonoBehaviour
     [SerializeField] private AudioController audioController;
     [SerializeField] private UIManager uiManager;
     [SerializeField] private StaticSymbolController staticSymbol;
+    [SerializeField] private ImageAnimation BonusWinningsImageAnimation;
 
     [Header("Sprites References")]
     [SerializeField] private Sprite[] index9Sprites;
@@ -217,13 +218,11 @@ public class BonusController : MonoBehaviour
                     }
                 }
             }
-
-            uiManager.PopulateWin(3);
-
             yield return new WaitForSeconds(5f);
-
             IsSpinning = false;
-            EndBonus();
+            StartCoroutine(EndBonus());
+            BonusWinnings_Text.text = "0";
+            yield break;
         }
 
         if (SocketManager.resultData.bonus.freeSpinAdded)
@@ -237,8 +236,9 @@ public class BonusController : MonoBehaviour
         IsSpinning = false;
     }
 
-    private void EndBonus()
+    private IEnumerator EndBonus()
     {
+        yield return StartCoroutine(uiManager.MidGameImageAnimation(BonusWinningsImageAnimation, int.Parse(BonusWinnings_Text.text)));
         BonusWinningsUI_Panel.SetActive(false);
         staticSymbol.Reset();
 
