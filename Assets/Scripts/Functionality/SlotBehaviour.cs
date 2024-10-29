@@ -491,7 +491,8 @@ public class SlotBehaviour : MonoBehaviour
 
         if (IsFreeSpin)
         {
-            FSnum_text.text = (freeSpinsCount - 1).ToString();
+            freeSpinsCount-=1;
+            FSnum_text.text = freeSpinsCount.ToString();
         }
 
         if (!autoSpin)
@@ -527,16 +528,16 @@ public class SlotBehaviour : MonoBehaviour
         IsSpinning = true;
         ToggleButtonGrp(false);
 
-        for (int i = 0; i < numberOfSlots; i++) // Initialize tweening for slot animations
-        {
-            InitializeTweening(Slot_Transform[i]);
-        }
-
-        if (!IsFreeSpin) // Deduct balance if not a bonus
+        if (!IsFreeSpin)
         {
             BalanceDeduction();
         }
 
+        for (int i = 0; i < numberOfSlots; i++) // Initialize tweening for slot animations
+        {
+            InitializeTweening(Slot_Transform[i]);
+        }
+        
         SocketManager.AccumulateResult(BetCounter);
         yield return new WaitUntil(() => SocketManager.isResultdone);
 
@@ -607,7 +608,6 @@ public class SlotBehaviour : MonoBehaviour
 
         if (SocketManager.playerdata.currentWining > 0) WinningsTextAnimation(); // Trigger winnings animation if applicable
 
-
         CheckPayoutLineBackend(SocketManager.resultData.linesToEmit, SocketManager.resultData.FinalsymbolsToEmit, SocketManager.resultData.jackpot);
         yield return new WaitForSeconds(1f);
         KillAllTweens();
@@ -621,69 +621,75 @@ public class SlotBehaviour : MonoBehaviour
         yield return new WaitUntil(()=> !CheckPopups);
         yield return new WaitUntil(() => WinAnimationFin);
 
-        if (SocketManager.resultData.bonus.isBonus)
+        if(SocketManager.playerdata.currentWining <= 0 && SocketManager.resultData.jackpot < 0 && !SocketManager.resultData.freeSpins.isNewAdded && freeSpinsCount<0)
         {
-            StopGameAnimation();
-
-            IsSpinning = false;
-            if (IsAutoSpin)
-            {
-                StopAutoSpin();
-            }
-            else if (IsFreeSpin)
-            {
-                FreeSpinsUI_Panel.SetActive(false);
-            }
-
-            yield return StartCoroutine(uiManager.MidGameImageAnimation(BonusImageAnimation));
-            staticSymbolController.TurnOnIndices(SocketManager.resultData.bonus.freezeIndices);             //code to turn on static slot objects to turn on
-            _bonusManager.StartBonus(SocketManager.resultData.bonus.spinCount);
+           audioController.PlayWLAudio("lose");
         }
 
         if (SocketManager.resultData.freeSpins.isNewAdded)
         {
-            if (IsFreeSpin)
+            // Free Spins have been awarded, trigger free spins animation and UI.
+            freeSpinsCount = SocketManager.resultData.freeSpins.count;
+            IsFreeSpin = true;
+            IsSpinning = false;
+
+            if (IsAutoSpin)
             {
-                yield return StartCoroutine(FreeSpinsSymbolAnimation());
+                StopAutoSpin();
             }
-            else
+
+            StopGameAnimation();
+
+            OpenFreeSpinsUI();
+            yield return StartCoroutine(FreeSpinsSymbolAnimation());
+
+            if (SocketManager.resultData.bonus.isBonus)
             {
-                freeSpinsCount = SocketManager.resultData.freeSpins.count;
-                IsFreeSpin = true;
-                IsSpinning = false;
-                if (IsAutoSpin)
-                {
-                    StopAutoSpin();
+                yield return StartCoroutine(uiManager.MidGameImageAnimation(BonusImageAnimation));
+
+                staticSymbolController.TurnOnIndices(SocketManager.resultData.bonus.freezeIndices); // Turn on static slot objects
+                yield return new WaitForSeconds(1f);
+                _bonusManager.StartBonus(SocketManager.resultData.bonus.spinCount);
+            }
+            else{
+                // Start free spins animation and open UI
+                yield return new WaitForSeconds(1f); // Optional delay for UI stability
+                if(IsFreeSpin){
+
                 }
-                StopGameAnimation();
-                yield return StartCoroutine(uiManager.MidGameImageAnimation(FreeGamesImageAnimation));
-                OpenFreeSpinsUI();
-                yield return new WaitForSeconds(1f); //can be removed
-                yield return StartCoroutine(FreeSpinsSymbolAnimation());
+                else{
+                    yield return StartCoroutine(uiManager.MidGameImageAnimation(FreeGamesImageAnimation, freeSpinsCount));
+                }
             }
         }
-
-        //if(SocketManager.playerdata.currentWining <= 0 && SocketManager.resultData.jackpot <= 0 && !SocketManager.resultData.freeSpins.isNewAdded)
-        //{
-        //    audioController.PlayWLAudio("lose");
-        //}
-
-        if (IsFreeSpin && SocketManager.resultData.freeSpins.count <= 0)
+        else if (SocketManager.resultData.bonus.isBonus)
         {
-            IsFreeSpin = false;
-            IsSpinning = false;
+            if(IsAutoSpin){
+                IsSpinning = false;
+                StopAutoSpin();
+            }
+
+            StopGameAnimation();
+
+            // Only Bonus is awarded without Free Spins, directly trigger bonus round
+            yield return StartCoroutine(uiManager.MidGameImageAnimation(BonusImageAnimation));
+
+            staticSymbolController.TurnOnIndices(SocketManager.resultData.bonus.freezeIndices);
+            yield return new WaitForSeconds(1f);
+            _bonusManager.StartBonus(SocketManager.resultData.bonus.spinCount);
+        }
+
+        // Post-bonus and free spins cleanup
+        ToggleButtonGrp(true);
+        IsSpinning = false;
+
+        if(freeSpinsCount<=0 && SocketManager.resultData.freeSpins.count<=0 && !SocketManager.resultData.freeSpins.isNewAdded){
+            IsFreeSpin=false;
             CloseFreeSpinsUI();
-            ToggleButtonGrp(true);
         }
-        else if(IsAutoSpin)
-        {
-            IsSpinning = false;
+
+        if(IsAutoSpin){
             yield return new WaitForSeconds(2f);
-        }
-        else
-        {
-            ToggleButtonGrp(true);
-            IsSpinning = false;
         }
     }
     #endregion
@@ -698,10 +704,6 @@ public class SlotBehaviour : MonoBehaviour
         {
             uiManager.PopulateWin(2);
         }
-        //else if (SocketManager.resultData.WinAmout >= currentTotalBet * 15)
-        //{
-        //    uiManager.PopulateWin(3);
-        //}
         else
         {
             CheckPopups = false;
@@ -711,14 +713,6 @@ public class SlotBehaviour : MonoBehaviour
     private IEnumerator FreeSpinsSymbolAnimation(){
         for(int i=0;i<ResultMatrix.Count;i++){
             foreach(Image slot in ResultMatrix[i].slotImages){
-                // foreach(Sprite s in losPollosSprites){
-                //     if(s!=null && s==slot.sprite){
-                //         ImageAnimation anim = slot.GetComponent<ImageAnimation>();
-                //         anim.doLoopAnimation = false;
-                //         anim.StartAnimation();
-                //         yield return null;
-                //     }
-                // }
                 for(int j=0;j<losPollosSprites.Count();j++){
                     if(losPollosSprites[j]!=null && losPollosSprites[j] == slot.sprite){
                         slot.transform.GetChild(4).GetComponent<Image>().sprite=losPollosNumberSprites[j];
@@ -729,6 +723,15 @@ public class SlotBehaviour : MonoBehaviour
                         yield return slot.transform.GetChild(4).DOLocalMove(FreeSpinCountUIPositon.position, 1.5f);
                         slot.transform.GetChild(4).gameObject.SetActive(false);
                         
+                        if(int.TryParse(FSnum_text.text, out int currFScount)){
+                            currFScount += j;
+                            FSnum_text.text = currFScount.ToString();
+                        }
+                        else{
+                            Debug.LogError("Error while FS int conversion");
+                        }
+
+                        slot.transform.GetChild(4).position = tempPosi;
                         yield return new WaitForSeconds(1f);
                     }
                 }
@@ -738,7 +741,12 @@ public class SlotBehaviour : MonoBehaviour
 
     private void OpenFreeSpinsUI()
     {
-        FSnum_text.text = "0";
+        if(freeSpinsCount>0){
+            FSnum_text.text = freeSpinsCount.ToString();
+        }
+        else{
+            FSnum_text.text = "0";
+        }
         FreeSpinsUI_Panel.SetActive(true);
         LinesUI.SetActive(false);
         TotalBetUI.SetActive(false);
@@ -747,6 +755,12 @@ public class SlotBehaviour : MonoBehaviour
 
     private void CloseFreeSpinsUI()
     {
+        if(freeSpinsCount>0){
+            FSnum_text.text = freeSpinsCount.ToString();
+        }
+        else{
+            FSnum_text.text = "0";
+        }
         FreeSpinsUI_Panel.SetActive(false);
         LinesUI.SetActive(true);
         TotalBetUI.SetActive(true);
@@ -847,16 +861,6 @@ public class SlotBehaviour : MonoBehaviour
                     }
                 }
             }
-
-            //if (!SocketManager.resultData.freeSpins.isNewAdded)
-            //{
-            //    if (SkipWinAnimation_Button) SkipWinAnimation_Button.gameObject.SetActive(true);
-            //}
-
-            //if (IsFreeSpin && !SocketManager.resultData.freeSpins.isNewAdded)
-            //{
-            //    if (BonusSkipWinAnimation_Button) BonusSkipWinAnimation_Button.gameObject.SetActive(true);
-            //}
         }
         else
         {

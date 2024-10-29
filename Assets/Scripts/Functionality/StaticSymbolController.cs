@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class StaticSymbolController : MonoBehaviour
 {
@@ -18,9 +19,9 @@ public class StaticSymbolController : MonoBehaviour
 
     [Header("Animation Sprites References")]
     [SerializeField] private Sprite[] LinkToGoldCoin_Animation;
-    
     internal List<Column> freezedLocations = new();
-
+    [SerializeField] private RectTransform middlePosition;
+    
     internal List<List<int>> GenerateFreezeMatrix(List<List<int>> loc, bool dontReturn= false)
     {
         // Initialize matrix with 0s

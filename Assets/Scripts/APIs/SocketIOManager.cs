@@ -27,9 +27,6 @@ public class SocketIOManager : MonoBehaviour
 
     private SocketManager manager;
 
-    [SerializeField]
-    internal JSHandler _jsManager;
-
     protected string SocketURI = null;
     //protected string TestSocketURI = "https://game-crm-rtp-backend.onrender.com/";
     //protected string TestSocketURI = "https://6f01c04j-5000.inc1.devtunnels.ms/";

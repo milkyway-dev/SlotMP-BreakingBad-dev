@@ -67,6 +67,9 @@ public class BonusController : MonoBehaviour
 
     internal void StartBonus(int count)
     {
+        if(FreeSpinsCounterUI_Panel.activeInHierarchy){
+            FreeSpinsCounterUI_Panel.SetActive(false);
+        }
         lineBet.SetActive(false);
         lines.SetActive(false);
         totalBet.SetActive(false);

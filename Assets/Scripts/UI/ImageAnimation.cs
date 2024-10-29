@@ -23,7 +23,7 @@ public class ImageAnimation : MonoBehaviour
 	private float delayBetweenAnimation;
 	public float AnimationSpeed = 5f;
 	public float delayBetweenLoop;
-
+	public bool StartOnAwake = false;
 	internal bool isAnim = false;
 
     private void OnValidate()
@@ -49,6 +49,13 @@ public class ImageAnimation : MonoBehaviour
 	private void OnDisable()
 	{
 		StopAnimation();
+	}
+	private void OnEnable()
+	{
+		if (StartOnAwake)
+        {
+			StartAnimation();
+        }
 	}
 
 	private void AnimationProcess()
