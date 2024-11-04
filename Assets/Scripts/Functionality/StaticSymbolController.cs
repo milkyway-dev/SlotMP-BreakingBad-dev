@@ -19,10 +19,11 @@ public class StaticSymbolController : MonoBehaviour
 
     [Header("Animation Sprites References")]
     [SerializeField] private Sprite[] LinkToGoldCoin_Animation;
-    internal List<Column> freezedLocations = new();
+
+    [SerializeField]internal List<Column> freezedLocations = new();
     [SerializeField] private RectTransform middlePosition;
     
-    internal List<List<int>> GenerateFreezeMatrix(List<List<int>> loc, bool dontReturn= false)
+    internal List<List<int>> GenerateFreezeMatrix(List<List<int>> loc, bool dontReturn=false)
     {
         // Initialize matrix with 0s
         List<List<int>> freezeMatrix = new List<List<int>>();
@@ -124,7 +125,7 @@ public class StaticSymbolController : MonoBehaviour
                     anim.StartAnimation();
                     yield return new WaitUntil(() => anim.rendererDelegate.sprite == anim.textureArray[7]);
                     anim.transform.GetChild(0).gameObject.SetActive(true);
-                    //yield return null;
+                    yield return new WaitForSeconds(0.5f);
                 }
             }
         }
@@ -145,6 +146,7 @@ public class StaticSymbolController : MonoBehaviour
                 j.gameObject.SetActive(false);
                 j.sprite = null;
                 j.transform.GetChild(0).GetComponent<TMPro.TMP_Text>().text = "";
+                j.GetComponent<ImageAnimation>().isAnim=false;
             }
         }
     }

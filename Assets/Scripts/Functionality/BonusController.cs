@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using TMPro;
 using DG.Tweening;
 using System.Linq;
+using Unity.VisualScripting;
 
 public class BonusController : MonoBehaviour
 {
@@ -21,6 +22,7 @@ public class BonusController : MonoBehaviour
     //[SerializeField] private Sprite[] losPollos;
     [SerializeField] private Sprite coinFrame;
     [SerializeField] private Sprite CC_Sprite;
+    [SerializeField] private Sprite Diamond_Sprite;
 
     [Header("UI Objects References")]
     [SerializeField] private CanvasGroup NormalSlot_CG;
@@ -34,13 +36,14 @@ public class BonusController : MonoBehaviour
     [SerializeField] private TMP_Text BonusWinnings_Text;
 
     [SerializeField] private Transform WinningsPosition;
+    [SerializeField] private RectTransform Diamond_Centre;
     [SerializeField] private GameObject BonusWinningsUI_Panel;
     [SerializeField] private GameObject FreeSpinsCounterUI_Panel;
     [SerializeField] private GameObject lines, lineBet, totalBet;
 
     [Header("Slot References")]
     [SerializeField] private List<SlotImage> TotalMiniSlotImages;     //class to store total images
-    [SerializeField] public List<SlotTransform> Slot;
+    [SerializeField] private List<SlotTransform> Slot;
 
     private List<KeyValuePair<Transform, Tweener>> singleSlotTweens = new List<KeyValuePair<Transform, Tweener>>();
     private int IconSizeFactor = 202;
@@ -62,7 +65,6 @@ public class BonusController : MonoBehaviour
                 TotalMiniSlotImages[i].slotImages[j].sprite = index9Sprites[randomIndex];
             }
         }
-
     }
 
     internal void StartBonus(int count)
@@ -198,7 +200,6 @@ public class BonusController : MonoBehaviour
                         Vector3 tempPosi = trail.transform.position;
                         yield return trail.transform.DOMove(WinningsPosition.position, .5f).OnComplete(()=>
                         {
-                            Debug.Log("Here");
                             trail.gameObject.SetActive(false);
                             trail.transform.position = tempPosi;
 
@@ -221,7 +222,17 @@ public class BonusController : MonoBehaviour
                     }
                 }
             }
-            yield return new WaitForSeconds(5f);
+
+            for(int i=0;i<Slot.Count;i++){
+                for(int j=0;j<Slot[i].slotTransforms.Count;j++){
+                    if(Slot[i].slotTransforms[j].GetChild(3).GetComponent<Image>().sprite == Diamond_Sprite){
+                        RectTransform trans = Slot[i].slotTransforms[j].GetChild(3).GetComponent<RectTransform>();
+                        trans.DOMove(Diamond_Centre.position, 2f);
+                        DOTween.To(()=> trans.sizeDelta, (val)=> trans.sizeDelta = val, Diamond_Centre.sizeDelta, 2f);
+                    }
+                }
+            }
+            yield return new WaitForSeconds(2f);
             IsSpinning = false;
             StartCoroutine(EndBonus());
             BonusWinnings_Text.text = "0";
@@ -311,6 +322,12 @@ public class BonusController : MonoBehaviour
         // Kill the original tween after it has completed
         tweenPair.Value.Kill();
     }
+
+    // private IEnumerator TriggerJackpot(){
+    //     yield return null;
+
+    //     for(int i=0; i<)
+    // }
 
     private void KillAllTweens()
     {

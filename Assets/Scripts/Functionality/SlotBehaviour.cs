@@ -223,18 +223,16 @@ public class SlotBehaviour : MonoBehaviour
         if (TotalBet_text) TotalBet_text.text = (SocketManager.initialData.Bets[BetCounter] * Lines).ToString();
 
         currentTotalBet = SocketManager.initialData.Bets[BetCounter] * Lines;
-        CompareBalance();
+        // CompareBalance();
     }
 
     #region InitialFunctions
     internal void shuffleInitialMatrix()
     {
-        for(int i = 0; i < images.Count; i++)
-        {
-            for(int j = 0; j < myImages.Length; j++)
-            {
-                int randomIndex = UnityEngine.Random.Range(0, myImages.Length-8);
-                images[i].slotImages[j].sprite = myImages[randomIndex];
+        for(int i=0;i<images.Count;i++){
+            for(int j=0;j<images[i].slotImages.Count;j++){
+                int randomIndex=UnityEngine.Random.Range(0, myImages.Length-8);
+                images[i].slotImages[j].sprite=myImages[randomIndex];
             }
         }
     }
@@ -259,7 +257,7 @@ public class SlotBehaviour : MonoBehaviour
         {
             for (int j = 0; j < 3; j++)
             {
-                if (Tempimages[i].slotImages[j].sprite == myImages[13])
+                if (Tempimages[i].slotImages[j].sprite == myImages[12]) //if the symbol is cash collect
                 {
                     // Store the original sibling index before changing it
                     Transform slotTransform = Tempimages[i].slotImages[j].transform;
@@ -655,7 +653,10 @@ public class SlotBehaviour : MonoBehaviour
                 // Start free spins animation and open UI
                 yield return new WaitForSeconds(1f); // Optional delay for UI stability
                 if(IsFreeSpin){
-
+                    int extraFreeSpins=SocketManager.resultData.freeSpins.count-freeSpinsCount;
+                    yield return StartCoroutine(uiManager.MidGameImageAnimation(FreeGamesImageAnimation, extraFreeSpins));
+                    yield return new WaitForSeconds(1f);
+                    yield return StartCoroutine(FreeSpinsSymbolAnimation());
                 }
                 else{
                     yield return StartCoroutine(uiManager.MidGameImageAnimation(FreeGamesImageAnimation, freeSpinsCount));
@@ -755,12 +756,7 @@ public class SlotBehaviour : MonoBehaviour
 
     private void CloseFreeSpinsUI()
     {
-        if(freeSpinsCount>0){
-            FSnum_text.text = freeSpinsCount.ToString();
-        }
-        else{
-            FSnum_text.text = "0";
-        }
+        FSnum_text.text = "0";
         FreeSpinsUI_Panel.SetActive(false);
         LinesUI.SetActive(true);
         TotalBetUI.SetActive(true);

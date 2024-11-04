@@ -349,7 +349,7 @@ public class UIManager : MonoBehaviour
 
         if (imageAnimation.name == "FreeSpinsImageAnimation")
         {
-            imageAnimation.PauseAnimation();
+            // imageAnimation.PauseAnimation();
             FreeSpinsText.color=new Color(FreeSpinsText.color.r, FreeSpinsText.color.g, FreeSpinsText.color.b, 0);
             FreeSpinsText.DOFade(1, 0.5f);
 
@@ -360,10 +360,10 @@ public class UIManager : MonoBehaviour
 
             yield return new WaitForSeconds(3f);
             FreeSpinsText.DOFade(0, 0.5f);
-            imageAnimation.ResumeAnimation();
+            // imageAnimation.ResumeAnimation();
         }
         else if(imageAnimation.name == "BonusWonImageAnimation"){
-            imageAnimation.PauseAnimation();
+            // imageAnimation.PauseAnimation();
             BonusGameWinningsText.color=new Color(BonusGameWinningsText.color.r, BonusGameWinningsText.color.g, BonusGameWinningsText.color.b, 0);
             BonusGameWinningsText.DOFade(1, 0.5f);
 
@@ -374,7 +374,7 @@ public class UIManager : MonoBehaviour
 
             yield return new WaitForSeconds(3f);
             BonusGameWinningsText.DOFade(0, 0.5f);
-            imageAnimation.ResumeAnimation();
+            // imageAnimation.ResumeAnimation();
         }
 
         yield return new WaitUntil(() => imageAnimation.rendererDelegate.sprite == imageAnimation.textureArray[imageAnimation.textureArray.Count - 1]);
