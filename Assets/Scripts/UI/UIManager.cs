@@ -72,6 +72,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text FreeSpinsText;
     [SerializeField] private TMP_Text BonusGameWinningsText;
 
+    [Header ("UI Text Objects")]
+    [SerializeField] private TMP_Text[] TopPayoutTextUI;
+
     private bool isMusic = true;
     private bool isSound = true;
     private bool isExit = false;
@@ -338,6 +341,14 @@ public class UIManager : MonoBehaviour
     {
         StartCoroutine(DownloadImage(AbtImgUrl));
         PopulateSymbolsPayout(symbolsText);
+        PopulateTopSymbolsPayout();
+        //add code to loop through top payout ui and change their payout values accordingly
+    }
+
+    internal void PopulateTopSymbolsPayout(){
+        for(int i=0;i<TopPayoutTextUI.Length;i++){
+            TopPayoutTextUI[i].text=(slotManager.currentTotalBet * socketManager.initialData.Jackpot[i]).ToString("F2");
+        }
     }
 
     internal IEnumerator MidGameImageAnimation(ImageAnimation imageAnimation, int num = 0)

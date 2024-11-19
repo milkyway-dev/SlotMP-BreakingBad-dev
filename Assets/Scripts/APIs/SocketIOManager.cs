@@ -27,7 +27,7 @@ public class SocketIOManager : MonoBehaviour
     //protected string TestSocketURI = "https://6f01c04j-5000.inc1.devtunnels.ms/";
     //protected string TestSocketURI = "https://7p68wzhv-5000.inc1.devtunnels.ms/"; //vikings
     //protected string TestSocketURI = "https://916smq0d-5001.inc1.devtunnels.ms/";
-    protected string TestSocketURI = "https://jmn3wfcb-5001.inc1.devtunnels.ms/";
+    protected string TestSocketURI = "http://localhost:5001/";
     [SerializeField]
     private string testToken;
     // protected string gameID = "SL-BB";
@@ -313,7 +313,7 @@ public class SocketIOManager : MonoBehaviour
         message.data = new BetData();
         message.data.currentBet = currBet;
         message.data.spins = 1;
-        message.data.currentLines = 20;
+        message.data.currentLines = 30;
         message.id = "SPIN";
 
         // Serialize message data to JSON
@@ -445,10 +445,16 @@ public class GameData
     public WinData winData { get; set; }
     public List<string> FinalsymbolsToEmit { get; set; }
     public List<string> FinalResultReel { get; set; }
-    public double jackpot { get; set; }
+    public Jackpot jackpot { get; set; }
+    public List<double> Jackpot { get; set; }
     public Bonus bonus { get; set; }
     public bool isBonus { get; set; }
     public double BonusStopIndex { get; set; }
+}
+public class Jackpot
+{
+    public bool isTriggered { get; set; }
+    public double payout { get; set; }
 }
 
 [Serializable]
@@ -464,6 +470,7 @@ public class Bonus
     public bool isGrandPrize { get; set; }
     public double grandPrizePayout { get; set; }
     public List<List<int>> freezeIndices { get; set; }
+    public List<CoinValues> coins { get; set; }
 }
 
 [System.Serializable]
@@ -484,7 +491,7 @@ public class LosPollos
 public class CoinValues
 {
     public List<int> index; 
-    public int value;
+    public double value;
 }
 
 [Serializable]

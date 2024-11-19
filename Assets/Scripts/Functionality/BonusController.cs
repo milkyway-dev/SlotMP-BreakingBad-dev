@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using TMPro;
 using DG.Tweening;
 using System.Linq;
-using Unity.VisualScripting;
 
 public class BonusController : MonoBehaviour
 {
@@ -82,10 +81,8 @@ public class BonusController : MonoBehaviour
         BonusSpinCounter_Text.text = count.ToString();
         BonusWinningsUI_Panel.SetActive(true);
 
-        DOTween.To(() => NormalSlot_CG.alpha, (val) => NormalSlot_CG.alpha = val, 0, .5f);
-      
-        DOTween.To(() => BonusSlot_CG.alpha, (val) => BonusSlot_CG.alpha = val, 1, .5f).OnComplete(() =>
-        {
+        NormalSlot_CG.DOFade(0, 0.5f);
+        BonusSlot_CG.DOFade(1, .5f).OnComplete(()=>{
             StartCoroutine(staticSymbol.ChangeLinkToGoldCoin(BonusSlotStart_Button));
         });
     }
@@ -129,34 +126,8 @@ public class BonusController : MonoBehaviour
         SocketManager.AccumulateResult(0);
         yield return new WaitUntil(() => SocketManager.isResultdone);
 
-        for (int j = 0; j < SocketManager.resultData.bonus.BonusResult.Count; j++)
-        {
-            for(int i = 0; i < 5; i++)
-            {
-                if(SocketManager.resultData.bonus.BonusResult[j][i] == 9)
-                {
-                    Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = index9Sprites[Random.Range(0, index9Sprites.Count())];
-                }
-                else if(SocketManager.resultData.bonus.BonusResult[j][i] == 14)
-                {
-                    //run a loop to find the value of the coin and set the coin and its text
-                    foreach (var coins in SocketManager.resultData.winData.coinValues)
-                    {
-                        if (coins.index[0] == j && coins.index[1] == i)
-                        {
-                            Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = coinFrame;
-                            Slot[j].slotTransforms[i].GetChild(3).GetChild(0).gameObject.SetActive(true);
-                            Slot[j].slotTransforms[i].GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = coins.value.ToString("f2");
-                            break;
-                        }
-                    }
-                }
-                else if(SocketManager.resultData.bonus.BonusResult[j][i] == 13)
-                {
-                    Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = CC_Sprite;
-                }
-            }
-        } 
+        PopulateSymbols();
+        yield return new WaitForSeconds(1f);
 
         // Create a list of all slot indices for randomization
         List<(int row, int col)> indices = new List<(int, int)>();
@@ -183,9 +154,9 @@ public class BonusController : MonoBehaviour
 
         KillAllTweens();
 
-        staticSymbol.GenerateFreezeMatrix(SocketManager.resultData.bonus.freezeIndices);
+        staticSymbol.GenerateFreezeMatrix(GenerateFreezedLocations());
 
-        if(SocketManager.resultData.bonus.isWalterStash || SocketManager.resultData.jackpot>0)
+        if(SocketManager.resultData.bonus.payout>0)
         {
             yield return new WaitForSeconds(2f);
 
@@ -223,15 +194,15 @@ public class BonusController : MonoBehaviour
                 }
             }
 
-            for(int i=0;i<Slot.Count;i++){
-                for(int j=0;j<Slot[i].slotTransforms.Count;j++){
-                    if(Slot[i].slotTransforms[j].GetChild(3).GetComponent<Image>().sprite == Diamond_Sprite){
-                        RectTransform trans = Slot[i].slotTransforms[j].GetChild(3).GetComponent<RectTransform>();
-                        trans.DOMove(Diamond_Centre.position, 2f);
-                        DOTween.To(()=> trans.sizeDelta, (val)=> trans.sizeDelta = val, Diamond_Centre.sizeDelta, 2f);
-                    }
-                }
-            }
+            // for(int i=0;i<Slot.Count;i++){
+            //     for(int j=0;j<Slot[i].slotTransforms.Count;j++){
+            //         if(Slot[i].slotTransforms[j].GetChild(3).GetComponent<Image>().sprite == Diamond_Sprite){
+            //             RectTransform trans = Slot[i].slotTransforms[j].GetChild(3).GetComponent<RectTransform>();
+            //             trans.DOMove(Diamond_Centre.position, 2f);
+            //             DOTween.To(()=> trans.sizeDelta, (val)=> trans.sizeDelta = val, Diamond_Centre.sizeDelta, 2f);
+            //         }
+            //     }
+            // }
             yield return new WaitForSeconds(2f);
             IsSpinning = false;
             StartCoroutine(EndBonus());
@@ -239,15 +210,51 @@ public class BonusController : MonoBehaviour
             yield break;
         }
 
-        if (SocketManager.resultData.bonus.freeSpinAdded)
-        {
-            BonusSpinCounter_Text.text = "3";
+        if(int.TryParse(BonusSpinCounter_Text.text, out int spinCount)){
+            if(spinCount != SocketManager.resultData.bonus.spinCount){
+                BonusSpinCounter_Text.text = SocketManager.resultData.bonus.spinCount.ToString();
+            }
         }
 
         yield return new WaitForSeconds(2f);
 
         BonusSlotStart_Button.interactable = true;
         IsSpinning = false;
+    }
+
+    private void PopulateSymbols(){
+        for (int j = 0; j < SocketManager.resultData.bonus.BonusResult.Count; j++)
+        {
+            for(int i = 0; i < 5; i++)
+            {
+                if(SocketManager.resultData.bonus.BonusResult[j][i] == 9)
+                {
+                    Debug.Log("loc: " + i + j + " is 9");
+                    Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = index9Sprites[Random.Range(0, index9Sprites.Count())];
+                }
+                else if(SocketManager.resultData.bonus.BonusResult[j][i] == 14)
+                {
+                    Debug.Log("loc: " + i + j + " is 14");
+                    //run a loop to find the value of the coin and set the coin and its text
+                    foreach (var coins in SocketManager.resultData.bonus.coins)
+                    {
+                        if (coins.index[0] == j && coins.index[1] == i)
+                        {
+                            Debug.Log("Setting coin frame");
+                            Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = coinFrame;
+                            Slot[j].slotTransforms[i].GetChild(3).GetChild(0).gameObject.SetActive(true);
+                            Slot[j].slotTransforms[i].GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = coins.value.ToString("f2");
+                            break;
+                        }
+                    }
+                }
+                else if(SocketManager.resultData.bonus.BonusResult[j][i] == 13)
+                {
+                    Debug.Log("loc: " + i + j + " is 13");
+                    Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = CC_Sprite;
+                }
+            }
+        } 
     }
 
     private IEnumerator EndBonus()
@@ -340,6 +347,20 @@ public class BonusController : MonoBehaviour
             singleSlotTweens.Clear();
         }
     }   
+
+    private List<List<int>> GenerateFreezedLocations(){
+        List<List<int>> loc = new();
+        for(int i=0;i<Slot.Count;i++){
+            for(int j=0;j<Slot[i].slotTransforms.Count;j++){
+                Sprite sprite = Slot[i].slotTransforms[j].GetChild(3).GetComponent<Image>().sprite;
+                if(staticSymbol.freezedLocations[i].index[j] == 0 && sprite == coinFrame || sprite == Diamond_Sprite){
+                    List<int> rXc = new() {i, j};
+                    loc.Add(rXc);
+                }
+            }
+        }
+        return loc;
+    }
 }
 
 [System.Serializable]

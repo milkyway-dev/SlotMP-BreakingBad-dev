@@ -22,9 +22,15 @@ public class StaticSymbolController : MonoBehaviour
 
     [SerializeField]internal List<Column> freezedLocations = new();
     [SerializeField] private RectTransform middlePosition;
+    [SerializeField] internal List<List<int>> Locations = new();
     
     internal List<List<int>> GenerateFreezeMatrix(List<List<int>> loc, bool dontReturn=false)
     {
+        for(int i=0;i<loc.Count;i++){
+            if(!Locations.Contains(loc[i])){
+                Locations.Add(loc[i]);
+            }
+        }
         // Initialize matrix with 0s
         List<List<int>> freezeMatrix = new List<List<int>>();
 
@@ -35,7 +41,7 @@ public class StaticSymbolController : MonoBehaviour
         }
 
         // Set 1s for frozen slots based on loc
-        foreach (List<int> indexPair in loc)
+        foreach (List<int> indexPair in Locations)
         {
             if (indexPair.Count == 2)
             {
@@ -55,7 +61,7 @@ public class StaticSymbolController : MonoBehaviour
         freezedLocations.Clear();
         foreach (var row in freezeMatrix)
         {
-            Column column = new Column { index = new List<int>(row) };
+            Column column = new() { index = new List<int>(row) };
             freezedLocations.Add(column);
         }
 
@@ -83,8 +89,7 @@ public class StaticSymbolController : MonoBehaviour
                 if (freezeMatrix[i][j] == 1)
                 {
                     // Apply effect to frozen slots
-
-                    if(slotManager.ResultMatrix[i].slotImages[j].sprite == images[11]) //Checking if the frozen slot is a coin
+                    if(slotManager.ResultMatrix[i].slotImages[j].sprite == images[11]) //Checking if the frozen slot is a link and turning it to a coin
                     {
                         Slot[i].slotImages[j].GetComponent<ImageAnimation>().isAnim = true;
                         foreach(Sprite s in LinkToGoldCoin_Animation)
@@ -93,11 +98,19 @@ public class StaticSymbolController : MonoBehaviour
                         }
                         //Add Value of the coins text component
                         
-                        foreach(CoinValues coin in socketManager.resultData.winData.coinValues)
+                        foreach(CoinValues coin in socketManager.resultData.bonus.coins)
                         {
                             if(coin.index[0] == i && coin.index[1] == j)
                             {
-                                Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMPro.TMP_Text>().text = coin.value.ToString("f2");
+                                Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMPro.TMP_Text>().text = coin.value.ToString("F2");
+                            }
+                        }
+                    }
+                    else if(socketManager.resultData.ResultReel[i][j] == "14"){
+                        foreach(CoinValues coin in socketManager.resultData.winData.coinValues){
+                            if(i == coin.index[0] && j == coin.index[1]){
+                                Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMPro.TMP_Text>().text = coin.value.ToString("F2");
+                                Slot[i].slotImages[j].transform.GetChild(0).gameObject.SetActive(true);
                             }
                         }
                     }
@@ -146,6 +159,7 @@ public class StaticSymbolController : MonoBehaviour
                 j.gameObject.SetActive(false);
                 j.sprite = null;
                 j.transform.GetChild(0).GetComponent<TMPro.TMP_Text>().text = "";
+                j.transform.GetChild(0).gameObject.SetActive(false);
                 j.GetComponent<ImageAnimation>().isAnim=false;
             }
         }
