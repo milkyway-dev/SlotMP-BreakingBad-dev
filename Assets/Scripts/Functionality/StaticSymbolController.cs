@@ -4,6 +4,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using TMPro;
 
 public class StaticSymbolController : MonoBehaviour
 {
@@ -19,6 +20,7 @@ public class StaticSymbolController : MonoBehaviour
 
     [Header("Animation Sprites References")]
     [SerializeField] private Sprite[] LinkToGoldCoin_Animation;
+    [SerializeField] private Sprite[] MegaLinkToGoldCoin_Animation;
 
     [SerializeField]internal List<Column> freezedLocations = new();
     [SerializeField] private RectTransform middlePosition;
@@ -102,18 +104,34 @@ public class StaticSymbolController : MonoBehaviour
                         {
                             if(coin.index[0] == i && coin.index[1] == j)
                             {
-                                Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMPro.TMP_Text>().text = coin.value.ToString("F2");
+                                Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMP_Text>().text = coin.value.ToString("F2");
+                                break;
                             }
                         }
                     }
-                    else if(socketManager.resultData.ResultReel[i][j] == "14"){
-                        foreach(CoinValues coin in socketManager.resultData.winData.coinValues){
-                            if(i == coin.index[0] && j == coin.index[1]){
-                                Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMPro.TMP_Text>().text = coin.value.ToString("F2");
-                                Slot[i].slotImages[j].transform.GetChild(0).gameObject.SetActive(true);
+                    else if(slotManager.ResultMatrix[i].slotImages[j].sprite == images[12]){ //checking if its megalink
+                        ImageAnimation imageAnimation = Slot[i].slotImages[j].GetComponent<ImageAnimation>();
+                        imageAnimation.isAnim = true;
+                        foreach(Sprite s in MegaLinkToGoldCoin_Animation){
+                            imageAnimation.textureArray.Add(s);
+                        }
+
+                        foreach(CoinValues coin in socketManager.resultData.bonus.coins){
+                            if(coin.index[0] == i && coin.index[1] == j){
+                                imageAnimation.transform.GetChild(0).GetComponent<TMP_Text>().text = coin.value.ToString("F2");
+                                break;
                             }
                         }
                     }
+                    // else if(socketManager.resultData.ResultReel[i][j] == "14"){ coin values gets payed out if they appear on the matrix so removed from here
+                    //     foreach(CoinValues coin in socketManager.resultData.winData.coinValues){
+                    //         if(i == coin.index[0] && j == coin.index[1]){
+                    //             Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMPro.TMP_Text>().text = coin.value.ToString("F2");
+                    //             Slot[i].slotImages[j].transform.GetChild(0).gameObject.SetActive(true);
+                    //             break;
+                    //         }
+                    //     }
+                    // }
                     Slot[i].slotImages[j].sprite = slotManager.ResultMatrix[i].slotImages[j].sprite;
                     Slot[i].slotImages[j].gameObject.SetActive(true);
                 }
@@ -125,7 +143,7 @@ public class StaticSymbolController : MonoBehaviour
         }
     }
 
-    internal IEnumerator ChangeLinkToGoldCoin(Button button)
+    internal IEnumerator ChangeLinksToGoldCoin(Button button)
     {
         for(int i = 0; i < Slot.Count; i++)
         {

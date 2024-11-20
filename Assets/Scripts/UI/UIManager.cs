@@ -5,6 +5,7 @@ using DG.Tweening;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.Networking;
+using System;
 
 public class UIManager : MonoBehaviour
 {
@@ -22,6 +23,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private RectTransform WinTextBgImage;
     [SerializeField] private TMP_Text Win_Text;
     [SerializeField] private Sprite[] BigWin_Sprites, MegaWin_Sprites, BonusWinnings_Sprites;
+    [SerializeField] private Transform WinningsPosition;
+    [SerializeField] private TMP_Text BonusWinnings_Text;
 
     [Header("Disconnection Popup")]
     [SerializeField] private Button CloseDisconnect_Button;
@@ -347,8 +350,35 @@ public class UIManager : MonoBehaviour
 
     internal void PopulateTopSymbolsPayout(){
         for(int i=0;i<TopPayoutTextUI.Length;i++){
-            TopPayoutTextUI[i].text=(slotManager.currentTotalBet * socketManager.initialData.Jackpot[i]).ToString("F2");
+            TopPayoutTextUI[i].text=(slotManager.currentLineBet * socketManager.initialData.Jackpot[i]).ToString("F2");
         }
+    }
+
+    internal IEnumerator TrailRendererAnimation(GameObject TrailRendererGO, int textIndex, int cashCollects){
+        TrailRenderer trail = TrailRendererGO.GetComponent<TrailRenderer>();
+        TrailRendererGO.gameObject.SetActive(true);
+        Vector3 tempPosi = trail.transform.position;
+        yield return trail.transform.DOMove(WinningsPosition.position, .5f).OnComplete(()=>
+        {
+            trail.gameObject.SetActive(false);
+            trail.transform.position = tempPosi;
+
+            double currWin = 0;
+            double coin = 0;
+            try
+            {
+                currWin = double.Parse(BonusWinnings_Text.text);
+                coin = double.Parse(TrailRendererGO.transform.parent.GetChild(textIndex).GetComponent<TMP_Text>().text) * cashCollects;
+            }
+            catch(Exception e)
+            {
+                Debug.Log(e.Message);
+            }
+
+            currWin += coin;
+            BonusWinnings_Text.text = currWin.ToString("F2");
+        });
+        yield return new WaitForSeconds(1f);
     }
 
     internal IEnumerator MidGameImageAnimation(ImageAnimation imageAnimation, int num = 0)

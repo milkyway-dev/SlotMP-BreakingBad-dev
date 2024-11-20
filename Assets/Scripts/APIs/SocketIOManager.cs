@@ -450,6 +450,7 @@ public class GameData
     public Bonus bonus { get; set; }
     public bool isBonus { get; set; }
     public double BonusStopIndex { get; set; }
+    public bool isCoinCollect {get; set;}
 }
 public class Jackpot
 {
