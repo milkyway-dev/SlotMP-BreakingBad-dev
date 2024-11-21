@@ -156,14 +156,19 @@ public class BonusController : MonoBehaviour
 
         staticSymbol.GenerateFreezeMatrix(GenerateFreezedLocations());
 
-        if(SocketManager.resultData.bonus.payout>0 && !SocketManager.resultData.bonus.isWalterStash)
+        if(SocketManager.playerdata.currentWining>0)
         {
+            if(SocketManager.resultData.bonus.isWalterStash){
+                Debug.Log("Walter stash triggered. Animation needs to be done");
+                //complete this part
+            }
+
             yield return new WaitForSeconds(2f);
 
             int ccCount = 0;
             for(int i = 0 ; i < SocketManager.resultData.bonus.BonusResult.Count; i++){
                 for(int j = 0 ; j < SocketManager.resultData.bonus.BonusResult[i].Count ; j++){
-                    if(SocketManager.resultData.bonus.BonusResult[i][j] == 13){
+                    if(SocketManager.resultData.bonus.BonusResult[i][j] == 13){ //ask or check if this is true 
                         ccCount++;
                     }
                 }
@@ -175,22 +180,13 @@ public class BonusController : MonoBehaviour
                 {
                     if(Slot[i].slotTransforms[j].GetChild(3).GetComponent<Image>().sprite == coinFrame)
                     {
-                        yield return uiManager.TrailRendererAnimation(Slot[i].slotTransforms[j].GetChild(3).GetChild(1).gameObject, 0, ccCount);
+                        yield return uiManager.TrailRendererAnimation(Slot[i].slotTransforms[j].GetChild(3).GetChild(1).gameObject, 0, ccCount, true);
                     }
                 }
             }
 
-            // for(int i=0;i<Slot.Count;i++){
-            //     for(int j=0;j<Slot[i].slotTransforms.Count;j++){
-            //         if(Slot[i].slotTransforms[j].GetChild(3).GetComponent<Image>().sprite == Diamond_Sprite){
-            //             RectTransform trans = Slot[i].slotTransforms[j].GetChild(3).GetComponent<RectTransform>();
-            //             trans.DOMove(Diamond_Centre.position, 2f);
-            //             DOTween.To(()=> trans.sizeDelta, (val)=> trans.sizeDelta = val, Diamond_Centre.sizeDelta, 2f);
-            //         }
-            //     }
-            // }
-            yield return new WaitForSeconds(2f);
             IsSpinning = false;
+            yield return new WaitForSeconds(2f);
             StartCoroutine(EndBonus());
             BonusWinnings_Text.text = "0";
             yield break;
@@ -245,7 +241,7 @@ public class BonusController : MonoBehaviour
 
     private IEnumerator EndBonus()
     {
-        yield return StartCoroutine(uiManager.MidGameImageAnimation(BonusWinningsImageAnimation, int.Parse(BonusWinnings_Text.text)));
+        yield return StartCoroutine(uiManager.MidGameImageAnimation(BonusWinningsImageAnimation, SocketManager.playerdata.currentWining));
         WinningsUI_Panel.DOFade(0, 0.3f);
         staticSymbol.Reset();
 
@@ -266,6 +262,7 @@ public class BonusController : MonoBehaviour
                 FreeSpinsCounterUI_Panel.SetActive(true);
             }
             AutoSpin_Button.gameObject.SetActive(true);
+            AutoSpin_Button.interactable = true;
             NormalSlotStart_Button.gameObject.SetActive(true);
             NormalSlotStart_Button.interactable = true;
         });

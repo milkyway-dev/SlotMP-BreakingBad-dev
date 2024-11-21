@@ -23,7 +23,6 @@ public class StaticSymbolController : MonoBehaviour
     [SerializeField] private Sprite[] MegaLinkToGoldCoin_Animation;
 
     [SerializeField]internal List<Column> freezedLocations = new();
-    [SerializeField] private RectTransform middlePosition;
     [SerializeField] internal List<List<int>> Locations = new();
     
     internal List<List<int>> GenerateFreezeMatrix(List<List<int>> loc, bool dontReturn=false)

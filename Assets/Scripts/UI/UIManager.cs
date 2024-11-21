@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.Networking;
 using System;
+using Best.SocketIO;
 
 public class UIManager : MonoBehaviour
 {
@@ -23,8 +24,10 @@ public class UIManager : MonoBehaviour
     [SerializeField] private RectTransform WinTextBgImage;
     [SerializeField] private TMP_Text Win_Text;
     [SerializeField] private Sprite[] BigWin_Sprites, MegaWin_Sprites, BonusWinnings_Sprites;
-    [SerializeField] private Transform WinningsPosition;
+    [SerializeField] private Transform BonusWinningsPosition;
     [SerializeField] private TMP_Text BonusWinnings_Text;
+    [SerializeField] private Transform BaseWinningsPosition;
+    [SerializeField] private TMP_Text BaseWinnings_Text;
 
     [Header("Disconnection Popup")]
     [SerializeField] private Button CloseDisconnect_Button;
@@ -292,18 +295,23 @@ public class UIManager : MonoBehaviour
 
     internal void PopulateWin(int value)
     {
+        Winnings_ImageAnimation.textureArray.Clear();
+        Winnings_ImageAnimation.textureArray.TrimExcess();
         switch (value)
         {
             case 1:
                 foreach(Sprite s in BigWin_Sprites)
                 {
                     Winnings_ImageAnimation.textureArray.Add(s);
+                    Winnings_ImageAnimation.AnimationSpeed = 25;
+
                 }
                 break;
             case 2:
                 foreach (Sprite s in MegaWin_Sprites)
                 {
                     Winnings_ImageAnimation.textureArray.Add(s);
+                    Winnings_ImageAnimation.AnimationSpeed = 40;
                 }
                 break;
             // case 4:
@@ -312,10 +320,10 @@ public class UIManager : MonoBehaviour
             //     break;
         }
 
-        StartPopupAnim();
+        StartCoroutine(StartPopupAnim());
     }
 
-    private void StartPopupAnim()
+    private IEnumerator StartPopupAnim()
     {
         if (WinPopup_Object) WinPopup_Object.SetActive(true);
         if (MainPopup_Object) MainPopup_Object.SetActive(true);
@@ -325,13 +333,16 @@ public class UIManager : MonoBehaviour
         Winnings_ImageAnimation.StartAnimation();
         WinTextBgImage.DOScale(Vector3.one, .5f).SetEase(Ease.OutCirc);
 
-        DOVirtual.DelayedCall(3f, () =>
-        {
+        double start=0;
+        DOTween.To(()=> start, (val)=> start = val, socketManager.playerdata.currentWining, 0.8f).OnUpdate(()=>{
+            Win_Text.text = start.ToString("F2");
+        });
+
+        yield return new WaitUntil(()=> Winnings_ImageAnimation.textureArray[^1]==Winnings_ImageAnimation.rendererDelegate.sprite);
+        Winnings_ImageAnimation.StopAnimation();
+        WinTextBgImage.DOScale(Vector3.zero, .5f).SetEase(Ease.InBack).OnComplete(() => {
+            slotManager.CheckPopups = false;
             ClosePopup(WinPopup_Object);
-            Winnings_ImageAnimation.StopAnimation();
-            WinTextBgImage.DOScale(Vector3.zero, .5f).SetEase(Ease.InBack).OnComplete(() => {
-                slotManager.CheckPopups = false;
-            });
         });
     }
 
@@ -354,11 +365,23 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    internal IEnumerator TrailRendererAnimation(GameObject TrailRendererGO, int textIndex, int cashCollects){
+    internal IEnumerator TrailRendererAnimation(GameObject TrailRendererGO, int textIndex, int cashCollects, bool IsBonus=false){
         TrailRenderer trail = TrailRendererGO.GetComponent<TrailRenderer>();
         TrailRendererGO.gameObject.SetActive(true);
         Vector3 tempPosi = trail.transform.position;
-        yield return trail.transform.DOMove(WinningsPosition.position, .5f).OnComplete(()=>
+        
+        Vector3 DOMovePosition = new();
+        TMP_Text text = null;
+        if(IsBonus){
+            DOMovePosition = BonusWinningsPosition.position;
+            text = BonusWinnings_Text;
+        }
+        else{
+            DOMovePosition = BaseWinningsPosition.position;
+            text=BaseWinnings_Text;
+        }
+
+        yield return trail.transform.DOMove(DOMovePosition, .5f).OnComplete(()=>
         {
             trail.gameObject.SetActive(false);
             trail.transform.position = tempPosi;
@@ -367,7 +390,7 @@ public class UIManager : MonoBehaviour
             double coin = 0;
             try
             {
-                currWin = double.Parse(BonusWinnings_Text.text);
+                currWin = double.Parse(text.text);
                 coin = double.Parse(TrailRendererGO.transform.parent.GetChild(textIndex).GetComponent<TMP_Text>().text) * cashCollects;
             }
             catch(Exception e)
@@ -376,50 +399,39 @@ public class UIManager : MonoBehaviour
             }
 
             currWin += coin;
-            BonusWinnings_Text.text = currWin.ToString("F2");
+            text.text = currWin.ToString("F2");
         });
         yield return new WaitForSeconds(1f);
     }
 
-    internal IEnumerator MidGameImageAnimation(ImageAnimation imageAnimation, int num = 0)
+    internal IEnumerator MidGameImageAnimation(ImageAnimation imageAnimation, double num = 0)
     {
         imageAnimation.transform.parent.gameObject.SetActive(true);
         imageAnimation.gameObject.SetActive(true);
         imageAnimation.StartAnimation();
-        yield return new WaitUntil(() => imageAnimation.rendererDelegate.sprite == imageAnimation.textureArray[imageAnimation.textureArray.Count - 2]);
 
+        TMP_Text text = null;
         if (imageAnimation.name == "FreeSpinsImageAnimation")
         {
-            // imageAnimation.PauseAnimation();
-            FreeSpinsText.color=new Color(FreeSpinsText.color.r, FreeSpinsText.color.g, FreeSpinsText.color.b, 0);
-            FreeSpinsText.DOFade(1, 0.5f);
-
-            int start = 0;
-            yield return DOTween.To(()=> start, (val)=> start = val, num, 1f).OnUpdate(()=>{
-                FreeSpinsText.text = start.ToString();
-            });
-
-            yield return new WaitForSeconds(3f);
-            FreeSpinsText.DOFade(0, 0.5f);
-            // imageAnimation.ResumeAnimation();
+            text = FreeSpinsText;
         }
         else if(imageAnimation.name == "BonusWonImageAnimation"){
-            // imageAnimation.PauseAnimation();
-            BonusGameWinningsText.color=new Color(BonusGameWinningsText.color.r, BonusGameWinningsText.color.g, BonusGameWinningsText.color.b, 0);
-            BonusGameWinningsText.DOFade(1, 0.5f);
+            text=BonusGameWinningsText;
+        }
+        
+        if(text!=null){
+            text.text = "0";
+            text.DOFade(1, 0.5f);
 
-            int start = 0;
-            yield return DOTween.To(()=> start, (val)=> start = val, num, 1f).OnUpdate(()=>{
-                BonusGameWinningsText.text = start.ToString();
+            double start = 0;
+            yield return DOTween.To(()=> start, (val)=> start = val, num, 0.8f).OnUpdate(()=>{
+                text.text = start.ToString("F2");
             });
-
-            yield return new WaitForSeconds(3f);
-            BonusGameWinningsText.DOFade(0, 0.5f);
-            // imageAnimation.ResumeAnimation();
         }
 
-        yield return new WaitUntil(() => imageAnimation.rendererDelegate.sprite == imageAnimation.textureArray[imageAnimation.textureArray.Count - 1]);
+        yield return new WaitUntil(() => imageAnimation.rendererDelegate.sprite == imageAnimation.textureArray[^1]);
         imageAnimation.transform.parent.gameObject.SetActive(false);
+        if(text!=null) text.DOFade(0, 0.5f);
         imageAnimation.StopAnimation();
         imageAnimation.gameObject.SetActive(false);
     }
