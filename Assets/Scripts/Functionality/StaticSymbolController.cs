@@ -92,17 +92,17 @@ public class StaticSymbolController : MonoBehaviour
                     // Apply effect to frozen slots
                     if(slotManager.ResultMatrix[i].slotImages[j].sprite == images[11]) //Checking if the frozen slot is a link and turning it to a coin
                     {
-                        Slot[i].slotImages[j].GetComponent<ImageAnimation>().isAnim = true;
-                        foreach(Sprite s in LinkToGoldCoin_Animation)
-                        {
-                            Slot[i].slotImages[j].GetComponent<ImageAnimation>().textureArray.Add(s);
+                        ImageAnimation imageAnimation = Slot[i].slotImages[j].GetComponent<ImageAnimation>();
+                        imageAnimation.isAnim = true;
+                        imageAnimation.textureArray.Clear();
+                        imageAnimation.textureArray.TrimExcess();
+                        foreach(Sprite s in LinkToGoldCoin_Animation){
+                            imageAnimation.textureArray.Add(s);
                         }
-                        //Add Value of the coins text component
                         
-                        foreach(CoinValues coin in socketManager.resultData.bonus.coins)
-                        {
-                            if(coin.index[0] == i && coin.index[1] == j)
-                            {
+                        //Add Value of the coins text component
+                        foreach(CoinValues coin in socketManager.resultData.bonus.coins){
+                            if(coin.index[0] == i && coin.index[1] == j){
                                 Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMP_Text>().text = coin.value.ToString("F2");
                                 break;
                             }
@@ -111,10 +111,13 @@ public class StaticSymbolController : MonoBehaviour
                     else if(slotManager.ResultMatrix[i].slotImages[j].sprite == images[12]){ //checking if its megalink
                         ImageAnimation imageAnimation = Slot[i].slotImages[j].GetComponent<ImageAnimation>();
                         imageAnimation.isAnim = true;
+                        imageAnimation.textureArray.Clear();
+                        imageAnimation.textureArray.TrimExcess();
                         foreach(Sprite s in MegaLinkToGoldCoin_Animation){
                             imageAnimation.textureArray.Add(s);
                         }
 
+                        //Add Value of the coins text component
                         foreach(CoinValues coin in socketManager.resultData.bonus.coins){
                             if(coin.index[0] == i && coin.index[1] == j){
                                 imageAnimation.transform.GetChild(0).GetComponent<TMP_Text>().text = coin.value.ToString("F2");
@@ -122,15 +125,6 @@ public class StaticSymbolController : MonoBehaviour
                             }
                         }
                     }
-                    // else if(socketManager.resultData.ResultReel[i][j] == "14"){ coin values gets payed out if they appear on the matrix so removed from here
-                    //     foreach(CoinValues coin in socketManager.resultData.winData.coinValues){
-                    //         if(i == coin.index[0] && j == coin.index[1]){
-                    //             Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMPro.TMP_Text>().text = coin.value.ToString("F2");
-                    //             Slot[i].slotImages[j].transform.GetChild(0).gameObject.SetActive(true);
-                    //             break;
-                    //         }
-                    //     }
-                    // }
                     Slot[i].slotImages[j].sprite = slotManager.ResultMatrix[i].slotImages[j].sprite;
                     Slot[i].slotImages[j].gameObject.SetActive(true);
                 }
@@ -155,7 +149,9 @@ public class StaticSymbolController : MonoBehaviour
                     anim.StartAnimation();
                     yield return new WaitUntil(() => anim.rendererDelegate.sprite == anim.textureArray[7]);
                     anim.transform.GetChild(0).gameObject.SetActive(true);
-                    yield return new WaitForSeconds(0.5f);
+                    yield return new WaitUntil(()=> anim.rendererDelegate.sprite == anim.textureArray[^1]);
+                    anim.StopAnimation();
+                    anim.rendererDelegate.sprite=images[14];
                 }
             }
         }
@@ -167,8 +163,10 @@ public class StaticSymbolController : MonoBehaviour
 
     internal void Reset()
     {
-        freezedLocations = new();
-
+        freezedLocations.Clear();
+        freezedLocations.TrimExcess();
+        Locations.Clear();
+        Locations.TrimExcess();
         for(int i = 0; i<Slot.Count; i++)
         {
             foreach (var j in Slot[i].slotImages)

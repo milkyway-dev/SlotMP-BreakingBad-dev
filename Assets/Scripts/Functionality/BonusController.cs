@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using TMPro;
 using DG.Tweening;
 using System.Linq;
+using UnityEngine.UI.Extensions;
 
 public class BonusController : MonoBehaviour
 {
@@ -34,11 +35,11 @@ public class BonusController : MonoBehaviour
     [SerializeField] private TMP_Text BonusSpinCounter_Text;
     [SerializeField] private TMP_Text BonusWinnings_Text;
 
-    [SerializeField] private Transform WinningsPosition;
-    [SerializeField] private RectTransform Diamond_Centre;
+    [SerializeField] private Transform GrandPayoutTRTransform; 
+    [SerializeField] private Transform BonusWinningsPosition;
     [SerializeField] private CanvasGroup WinningsUI_Panel;
-    [SerializeField] private GameObject FreeSpinsCounterUI_Panel;
-    [SerializeField] private GameObject lines, lineBet, totalBet;
+    [SerializeField] private CanvasGroup FreeSpinsCounterUI_Panel;
+    [SerializeField] private CanvasGroup lines, lineBet, totalBet;
 
     [Header("Slot References")]
     [SerializeField] private List<SlotImage> TotalMiniSlotImages;     //class to store total images
@@ -56,24 +57,17 @@ public class BonusController : MonoBehaviour
             BonusSlotStart_Button.onClick.AddListener(StartBonusSlot);
         }
 
-        for(int i = 0; i < TotalMiniSlotImages.Count; i++)
-        {
-            for (int j = 0; j < TotalMiniSlotImages[i].slotImages.Count; j++)
-            {
-                int randomIndex = Random.Range(0, index9Sprites.Length);
-                TotalMiniSlotImages[i].slotImages[j].sprite = index9Sprites[randomIndex];
-            }
-        }
+        ResetMatrix();
     }
 
     internal void StartBonus(int count)
     {
-        if(FreeSpinsCounterUI_Panel.activeInHierarchy){
-            FreeSpinsCounterUI_Panel.SetActive(false);
+        if(FreeSpinsCounterUI_Panel.alpha!=0){
+            FreeSpinsCounterUI_Panel.DOFade(1, 0.3f);
         }
-        lineBet.SetActive(false);
-        lines.SetActive(false);
-        totalBet.SetActive(false);
+        if(lines.alpha!=0) lines.DOFade(0, 0.3f).OnComplete(()=> {lines.interactable=false; lines.blocksRaycasts=false;});
+        if(totalBet.alpha!=0) totalBet.DOFade(0, 0.3f).OnComplete(()=> {totalBet.interactable=false; totalBet.blocksRaycasts=false;});
+        if(lineBet.alpha!=0) lineBet.DOFade(0, 0.3f).OnComplete(()=> {lineBet.interactable=false; lineBet.blocksRaycasts=false;});
         NormalSlotStart_Button.gameObject.SetActive(false);
         AutoSpin_Button.gameObject.SetActive(false);
         BonusSlotStart_Button.interactable = false;
@@ -126,7 +120,6 @@ public class BonusController : MonoBehaviour
         SocketManager.AccumulateResult(0);
         yield return new WaitUntil(() => SocketManager.isResultdone);
 
-        PopulateSymbols();
         yield return new WaitForSeconds(1f);
 
         // Create a list of all slot indices for randomization
@@ -142,6 +135,7 @@ public class BonusController : MonoBehaviour
         // Shuffle the list to get random indices
         System.Random random = new System.Random();
         indices = indices.OrderBy(x => random.Next()).ToList();
+        PopulateSymbols();
 
         foreach (var (row, col) in indices)
         {
@@ -158,12 +152,24 @@ public class BonusController : MonoBehaviour
 
         if(SocketManager.playerdata.currentWining>0)
         {
+            yield return new WaitForSeconds(0.5f);
             if(SocketManager.resultData.bonus.isWalterStash){
-                Debug.Log("Walter stash triggered. Animation needs to be done");
-                //complete this part
+                Debug.Log("Triggering walter stash payout");
+                Vector3 tempPosi = GrandPayoutTRTransform.localPosition;
+                GrandPayoutTRTransform.gameObject.SetActive(true);
+                yield return GrandPayoutTRTransform.DOLocalMove(BonusWinningsPosition.localPosition, 0.5f).OnComplete(()=>{
+                    double start = 0;
+                    double MajorJackpotWinning=SocketManager.initialData.Jackpot[0]*slotManager.currentLineBet;
+                    DOTween.To(()=> start, (val)=> start = val, MajorJackpotWinning, 0.3f).OnUpdate(()=>{
+                        BonusWinnings_Text.text = start.ToString("F2");
+                    }).WaitForCompletion();
+                })
+                .WaitForCompletion();
+                GrandPayoutTRTransform.gameObject.SetActive(false);
+                GrandPayoutTRTransform.localPosition = tempPosi;
             }
 
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1f);
 
             int ccCount = 0;
             for(int i = 0 ; i < SocketManager.resultData.bonus.BonusResult.Count; i++){
@@ -241,31 +247,46 @@ public class BonusController : MonoBehaviour
 
     private IEnumerator EndBonus()
     {
-        yield return StartCoroutine(uiManager.MidGameImageAnimation(BonusWinningsImageAnimation, SocketManager.playerdata.currentWining));
-        WinningsUI_Panel.DOFade(0, 0.3f);
-        staticSymbol.Reset();
+        slotManager.IsBonus=false;
+        BonusSlotStart_Button.gameObject.SetActive(false);
+        BonusSlotStart_Button.interactable = false;
 
-        DOTween.To(() => BonusSlot_CG.alpha, (val) => BonusSlot_CG.alpha = val, 0, .5f);
-        
-        DOTween.To(() => NormalSlot_CG.alpha, (val) => NormalSlot_CG.alpha = val, 1, .5f).OnComplete(() =>
+        if(SocketManager.playerdata.currentWining>0){
+            yield return uiManager.MidGameImageAnimation(BonusWinningsImageAnimation, SocketManager.playerdata.currentWining);
+            slotManager.WinningsTextAnimation();
+        }
+        WinningsUI_Panel.DOFade(0, 0.3f);
+
+        // DOTween.To(() => BonusSlot_CG.alpha, (val) => BonusSlot_CG.alpha = val, 0, .5f);
+        BonusSlot_CG.DOFade(0, 0.5f);
+                
+        NormalSlot_CG.DOFade(1, 0.5f).OnComplete(() =>
         {
-            BonusSlotStart_Button.gameObject.SetActive(false);
-            BonusSlotStart_Button.interactable = false;
             if (SocketManager.resultData.freeSpins.count <= 0)
             {
-                lineBet.SetActive(true);
-                lines.SetActive(true);
-                totalBet.SetActive(true);
+                slotManager.CloseFreeSpinsUI();
             }
             else
             {
-                FreeSpinsCounterUI_Panel.SetActive(true);
+                slotManager.OpenFreeSpinsUI();
             }
-            AutoSpin_Button.gameObject.SetActive(true);
-            AutoSpin_Button.interactable = true;
-            NormalSlotStart_Button.gameObject.SetActive(true);
-            NormalSlotStart_Button.interactable = true;
+            slotManager.ToggleButtonGrp(true);
+            staticSymbol.Reset();
+            ResetMatrix();
         });
+    }
+
+    private void ResetMatrix(){
+        for(int i = 0; i < TotalMiniSlotImages.Count; i++)
+        {
+            for (int j = 0; j < TotalMiniSlotImages[i].slotImages.Count; j++)
+            {
+                int randomIndex = Random.Range(0, index9Sprites.Length);
+                TotalMiniSlotImages[i].slotImages[j].sprite = index9Sprites[randomIndex];
+                if(j==3)
+                    TotalMiniSlotImages[i].slotImages[j].transform.GetChild(0).gameObject.SetActive(false);
+            }
+        }
     }
 
     private void InitializeSingleSlotTweening(Transform slotTransform, bool bonus = false)

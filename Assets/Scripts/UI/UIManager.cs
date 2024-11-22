@@ -52,9 +52,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button PaytableClose_Button;
     [SerializeField] private Button PaytableLeft_Button;
     [SerializeField] private Button PaytableRight_Button;
-    [SerializeField] private TMP_Text FreeSpin_Text;
-    [SerializeField] private TMP_Text Jackpot_Text;
-    [SerializeField] private TMP_Text Wild_Text;
     [SerializeField] private List<GameObject> GameRulesPages = new();
     private int PageIndex;
 
@@ -398,8 +395,10 @@ public class UIManager : MonoBehaviour
                 Debug.Log(e.Message);
             }
 
-            currWin += coin;
-            text.text = currWin.ToString("F2");
+            double Total = currWin + coin;
+            DOTween.To(()=> currWin, (val)=> currWin = val, Total, 0.3f).OnUpdate(()=>{
+                text.text=currWin.ToString("F2");
+            }).WaitForCompletion();
         });
         yield return new WaitForSeconds(1f);
     }
@@ -411,12 +410,14 @@ public class UIManager : MonoBehaviour
         imageAnimation.StartAnimation();
 
         TMP_Text text = null;
+        bool useF2=false;
         if (imageAnimation.name == "FreeSpinsImageAnimation")
         {
             text = FreeSpinsText;
         }
         else if(imageAnimation.name == "BonusWonImageAnimation"){
             text=BonusGameWinningsText;
+            useF2 =true;
         }
         
         if(text!=null){
@@ -425,7 +426,12 @@ public class UIManager : MonoBehaviour
 
             double start = 0;
             yield return DOTween.To(()=> start, (val)=> start = val, num, 0.8f).OnUpdate(()=>{
-                text.text = start.ToString("F2");
+                if(useF2){
+                    text.text = start.ToString("F2");
+                }
+                else{
+                    text.text = ((int)start).ToString();
+                }
             });
         }
 
@@ -454,22 +460,6 @@ public class UIManager : MonoBehaviour
                 text += "\n3x - " + paylines.symbols[i].Multiplier[2][0];
             }
             if (SymbolsText[i]) SymbolsText[i].text = text;
-        }
-
-        for (int i = 0; i < paylines.symbols.Count; i++)
-        {
-            if (paylines.symbols[i].Name.ToUpper() == "FREESPIN")
-            {
-                if (FreeSpin_Text) FreeSpin_Text.text = paylines.symbols[i].description.ToString();
-            }            
-            if (paylines.symbols[i].Name.ToUpper() == "JACKPOT")
-            {
-                if (Jackpot_Text) Jackpot_Text.text = paylines.symbols[i].description.ToString();
-            }
-            if (paylines.symbols[i].Name.ToUpper() == "WILD")
-            {
-                if (Wild_Text) Wild_Text.text = paylines.symbols[i].description.ToString();
-            }
         }
     }
 
