@@ -254,7 +254,7 @@ public class SlotBehaviour : MonoBehaviour
         BetCounter = 0;
         if (LineBet_text) LineBet_text.text = SocketManager.initialData.Bets[BetCounter].ToString();
         if (TotalBet_text) TotalBet_text.text = (SocketManager.initialData.Bets[BetCounter] * Lines).ToString();
-        if (TotalWin_text) TotalWin_text.text = "0.00";
+        if (TotalWin_text) TotalWin_text.text = "0.000";
         if (Balance_text) Balance_text.text = SocketManager.playerdata.Balance.ToString("f2");
         currentBalance = SocketManager.playerdata.Balance;
         currentTotalBet = SocketManager.initialData.Bets[BetCounter] * Lines;
@@ -541,7 +541,7 @@ public class SlotBehaviour : MonoBehaviour
         if (LineBetMinus_Button && LineBetMinus_Button.interactable!=false) LineBetMinus_Button.interactable = false;
         if (TotalBetPlus_Button && TotalBetPlus_Button.interactable!=false) TotalBetPlus_Button.interactable = false;
         if (TotalBetMinus_Button && TotalBetMinus_Button.interactable!=false) TotalBetMinus_Button.interactable = false;
-        if (TotalWin_text) TotalWin_text.text = "0.00";
+        if (TotalWin_text) TotalWin_text.text = "0.000";
 
         StopGameAnimation(); //commented this line for testing
 
@@ -767,7 +767,7 @@ public class SlotBehaviour : MonoBehaviour
     private IEnumerator ResetUI(){
         if (TotalWin_text) {
             yield return new WaitForSeconds(.5f);
-            TotalWin_text.text = "0.00";
+            TotalWin_text.text = "0.000";
         }
         if (IsAutoSpin)
         {
@@ -882,7 +882,7 @@ public class SlotBehaviour : MonoBehaviour
     private void JackpotWinnings(){
         double start = 0;
         DOTween.To(()=> start, (val)=> start = val, SocketManager.resultData.jackpot.payout, 0.5f).OnUpdate(()=>{
-            TotalWin_text.text = start.ToString("F2");
+            TotalWin_text.text = start.ToString("F3");
         });
     }
 
@@ -1047,7 +1047,7 @@ public class SlotBehaviour : MonoBehaviour
         }
         DOTween.To(() => currentWin, (val) => currentWin = val, winAmt, 0.8f).OnUpdate(() =>
         {
-            if (TotalWin_text) TotalWin_text.text = currentWin.ToString("f2");
+            if (TotalWin_text) TotalWin_text.text = currentWin.ToString("f3");
         });
         DOTween.To(() => currentBal, (val) => currentBal = val, Balance, 0.8f).OnUpdate(() =>
         {
