@@ -7,7 +7,6 @@ public class AudioController : MonoBehaviour
     [SerializeField] internal AudioSource audioPlayer_button;
     [SerializeField] internal AudioSource audioSpin_button;
     [SerializeField] private AudioClip[] clips;
-    [SerializeField] private AudioClip[] Bonusclips;
     [SerializeField] private AudioSource bg_audioBonus;
     [SerializeField] private AudioSource audioPlayer_Bonus;
 
@@ -75,6 +74,15 @@ public class AudioController : MonoBehaviour
                 break;
             case "megaWin":
                 index = 4;
+                break;
+            case "CollectCoin":
+                index = 5;
+                break;
+            case "StartAudio":
+                index = 6;
+                break;
+            case "Electric":
+                index=7;
                 break;
         }
         StopWLAaudio();

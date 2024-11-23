@@ -57,6 +57,7 @@ public class UIManager : MonoBehaviour
 
     [Header("Paytable Slot Text")]
     [SerializeField] private List<TMP_Text> SymbolsText = new();
+    [SerializeField] private Button RaycastLayerButton;
 
     [Header("Game Quit Objects")]
     [SerializeField] private GameObject QuitMenuObject;
@@ -86,6 +87,8 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+        if (RaycastLayerButton) RaycastLayerButton.onClick.RemoveAllListeners();
+        if (RaycastLayerButton) RaycastLayerButton.onClick.AddListener(() => CanCloseMenu());
 
         if (LBExit_Button) LBExit_Button.onClick.RemoveAllListeners();
         if (LBExit_Button) LBExit_Button.onClick.AddListener(delegate { ClosePopup(LBPopup_Object); });
@@ -144,6 +147,14 @@ public class UIManager : MonoBehaviour
 
         if (PaytableRight_Button) PaytableRight_Button.onClick.RemoveAllListeners();
         if (PaytableRight_Button) PaytableRight_Button.onClick.AddListener(()=> ChangePage(true));
+    }
+
+    internal void CanCloseMenu()
+    {
+        if (isMenu)
+        {
+            OpenCloseMenu(false);
+        }
     }
 
     private void ChangePage(bool IncDec)
@@ -243,7 +254,7 @@ public class UIManager : MonoBehaviour
 
         if (MainPopup_Object) MainPopup_Object.SetActive(true);
         if (Settings_Object) Settings_Object.SetActive(true);
-        OpenCloseMenu(false);
+        CanCloseMenu();
     }
 
     private void OpenQuitPanel()
@@ -253,6 +264,7 @@ public class UIManager : MonoBehaviour
 
         if (MainPopup_Object) MainPopup_Object.SetActive(true);
         if (QuitMenuObject) QuitMenuObject.SetActive(true);
+        CanCloseMenu();
     }
 
     private void OpenPaytablePanel()
@@ -274,11 +286,12 @@ public class UIManager : MonoBehaviour
 
         if (PaytableMenuObject) PaytableMenuObject.SetActive(true);
 
-        OpenCloseMenu(false);
+        CanCloseMenu();
     }
 
     internal void LowBalPopup()
     {
+        CanCloseMenu();
         OpenPopup(LBPopup_Object);
     }
 
@@ -286,6 +299,7 @@ public class UIManager : MonoBehaviour
     {
         if (!isExit)
         {
+            CanCloseMenu();
             OpenPopup(DisconnectPopup_Object);
         }
     }
@@ -311,10 +325,6 @@ public class UIManager : MonoBehaviour
                     Winnings_ImageAnimation.AnimationSpeed = 40;
                 }
                 break;
-            // case 4:
-            //     if (Win_Image) Win_Image.sprite = Jackpot_Sprite;
-            //     JackpotImageAnimation.StartAnimation();
-            //     break;
         }
 
         StartCoroutine(StartPopupAnim());
@@ -337,6 +347,7 @@ public class UIManager : MonoBehaviour
 
         yield return new WaitUntil(()=> Winnings_ImageAnimation.textureArray[^1]==Winnings_ImageAnimation.rendererDelegate.sprite);
         Winnings_ImageAnimation.StopAnimation();
+        audioController.StopWLAaudio();
         WinTextBgImage.DOScale(Vector3.zero, .5f).SetEase(Ease.InBack).OnComplete(() => {
             slotManager.CheckPopups = false;
             ClosePopup(WinPopup_Object);
@@ -353,6 +364,7 @@ public class UIManager : MonoBehaviour
         StartCoroutine(DownloadImage(AbtImgUrl));
         PopulateSymbolsPayout(symbolsText);
         PopulateTopSymbolsPayout();
+        audioController.PlayWLAudio("StartAudio");
         //add code to loop through top payout ui and change their payout values accordingly
     }
 
@@ -380,6 +392,7 @@ public class UIManager : MonoBehaviour
 
         yield return trail.transform.DOMove(DOMovePosition, .5f).OnComplete(()=>
         {
+            audioController.PlayWLAudio("CollectCoin");
             trail.gameObject.SetActive(false);
             trail.transform.position = tempPosi;
 
@@ -411,11 +424,14 @@ public class UIManager : MonoBehaviour
 
         TMP_Text text = null;
         bool useF2=false;
+        bool audio = false;
         if (imageAnimation.name == "FreeSpinsImageAnimation")
         {
             text = FreeSpinsText;
         }
         else if(imageAnimation.name == "BonusWonImageAnimation"){
+            audio = true; 
+            audioController.PlayWLAudio("bigwin");
             text=BonusGameWinningsText;
             useF2 =true;
         }
@@ -438,6 +454,7 @@ public class UIManager : MonoBehaviour
         yield return new WaitUntil(() => imageAnimation.rendererDelegate.sprite == imageAnimation.textureArray[^1]);
         imageAnimation.transform.parent.gameObject.SetActive(false);
         if(text!=null) text.DOFade(0, 0.5f);
+        if(audio) audioController.StopWLAaudio();
         imageAnimation.StopAnimation();
         imageAnimation.gameObject.SetActive(false);
     }

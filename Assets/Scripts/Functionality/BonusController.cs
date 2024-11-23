@@ -76,6 +76,7 @@ public class BonusController : MonoBehaviour
         WinningsUI_Panel.DOFade(1, 0.3f);
 
         NormalSlot_CG.DOFade(0, 0.5f);
+        audioController.SwitchBGSound(true);
         BonusSlot_CG.DOFade(1, .5f).OnComplete(()=>{
             StartCoroutine(staticSymbol.ChangeLinksToGoldCoin(BonusSlotStart_Button));
         });
@@ -259,7 +260,7 @@ public class BonusController : MonoBehaviour
 
         // DOTween.To(() => BonusSlot_CG.alpha, (val) => BonusSlot_CG.alpha = val, 0, .5f);
         BonusSlot_CG.DOFade(0, 0.5f);
-                
+        audioController.SwitchBGSound(false);        
         NormalSlot_CG.DOFade(1, 0.5f).OnComplete(() =>
         {
             if (SocketManager.resultData.freeSpins.count <= 0)
