@@ -15725,7 +15725,7 @@ MonoBehaviour:
   slotManager: {fileID: 2046803210}
   uiManager: {fileID: 377874625}
   bonusdata: []
-  testToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZjI4NTgyNmUxNWVlNzkwZGY4MzQwNCIsInVzZXJuYW1lIjoidmFpYmhhdiIsInJvbGUiOiJwbGF5ZXIiLCJpYXQiOjE3MzE3Nzc1OTgsImV4cCI6MTczMjM4MjM5OH0.OyfaG9nghu78Jl1he4My6oLfSrXsrjcEoGcre59I-HI
+  testToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZjI4NTgyNmUxNWVlNzkwZGY4MzQwNCIsInVzZXJuYW1lIjoidmFpYmhhdiIsInJvbGUiOiJwbGF5ZXIiLCJpYXQiOjE3MzIzNDc5OTgsImV4cCI6MTczMjk1Mjc5OH0.xR1617oSzLxQtBK6CUFCSE4nnw8qnjV0bB7zAsseI1A
 --- !u!1 &501201621
 GameObject:
   m_ObjectHideFlags: 0
