@@ -342,7 +342,7 @@ public class UIManager : MonoBehaviour
 
         double start=0;
         DOTween.To(()=> start, (val)=> start = val, socketManager.playerdata.currentWining, 0.8f).OnUpdate(()=>{
-            Win_Text.text = start.ToString("F2");
+            Win_Text.text = start.ToString("F3");
         });
 
         yield return new WaitUntil(()=> Winnings_ImageAnimation.textureArray[^1]==Winnings_ImageAnimation.rendererDelegate.sprite);
@@ -410,7 +410,7 @@ public class UIManager : MonoBehaviour
 
             double Total = currWin + coin;
             DOTween.To(()=> currWin, (val)=> currWin = val, Total, 0.3f).OnUpdate(()=>{
-                text.text=currWin.ToString("F2");
+                text.text=currWin.ToString("F3");
             }).WaitForCompletion();
         });
         yield return new WaitForSeconds(1f);
@@ -443,7 +443,7 @@ public class UIManager : MonoBehaviour
             double start = 0;
             yield return DOTween.To(()=> start, (val)=> start = val, num, 0.8f).OnUpdate(()=>{
                 if(useF2){
-                    text.text = start.ToString("F2");
+                    text.text = start.ToString("F3");
                 }
                 else{
                     text.text = ((int)start).ToString();
