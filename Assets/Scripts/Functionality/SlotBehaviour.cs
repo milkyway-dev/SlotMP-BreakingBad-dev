@@ -259,6 +259,7 @@ public class SlotBehaviour : MonoBehaviour
         currentBalance = SocketManager.playerdata.Balance;
         currentTotalBet = SocketManager.initialData.Bets[BetCounter] * Lines;
         currentLineBet = SocketManager.initialData.Bets[BetCounter];
+        shuffleInitialMatrix();
         CompareBalance();
         uiManager.InitialiseUIData(SocketManager.initUIData.AbtLogo.link, SocketManager.initUIData.AbtLogo.logoSprite, SocketManager.initUIData.ToULink, SocketManager.initUIData.PopLink, SocketManager.initUIData.paylines);
     }

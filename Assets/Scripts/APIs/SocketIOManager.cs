@@ -23,7 +23,7 @@ public class SocketIOManager : MonoBehaviour
     internal List<List<int>> LineData = null;
     private SocketManager manager;
     protected string SocketURI = null;
-    //protected string TestSocketURI = "https://game-crm-rtp-backend.onrender.com/";
+    // protected string TestSocketURI = "https://game-crm-rtp-backend.onrender.com/";
     //protected string TestSocketURI = "https://6f01c04j-5000.inc1.devtunnels.ms/";
     //protected string TestSocketURI = "https://7p68wzhv-5000.inc1.devtunnels.ms/"; //vikings
     //protected string TestSocketURI = "https://916smq0d-5001.inc1.devtunnels.ms/";
@@ -252,14 +252,7 @@ public class SocketIOManager : MonoBehaviour
                     LineData = myData.message.GameData.Lines;
                     if (!SetInit)
                     {
-                        //Debug.Log(jsonObject);
-                        //List<string> LinesString = ConvertListListIntToListString(initialData.Lines);
-                        //List<string> InitialReels = ConvertListOfListsToStrings(initialData.Reel);
-                        //InitialReels = RemoveQuotes(InitialReels);
-                        //PopulateSlotSocket(InitialReels, LinesString);
-
-                        slotManager.shuffleInitialMatrix();
-                        slotManager.SetInitialUI();
+                        PopulateSlotSocket();
                         SetInit = true;
                     }
                     else
@@ -296,10 +289,8 @@ public class SocketIOManager : MonoBehaviour
         uiManager.InitialiseUIData(initUIData.AbtLogo.link, initUIData.AbtLogo.logoSprite, initUIData.ToULink, initUIData.PopLink, initUIData.paylines);
     }
 
-    private void PopulateSlotSocket(List<string> slotPop, List<string> LineIds)
+    private void PopulateSlotSocket()
     {
-        //slotManager.shuffleInitialMatrix();
-
         slotManager.SetInitialUI();
 
         isLoaded = true;
