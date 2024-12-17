@@ -110,7 +110,7 @@ public class SlotBehaviour : MonoBehaviour
 
     int tweenHeight = 0;  //calculate the height at which tweening is done
     private int BetCounter = 0;
-    protected int Lines = 20;
+    protected int Lines = 30;
     private int numberOfSlots = 5;          //number of columns
     private int freeSpinsCount;
     [SerializeField] private int IconSizeFactor = 100;       //set this parameter according to the size of the icon and spacing
