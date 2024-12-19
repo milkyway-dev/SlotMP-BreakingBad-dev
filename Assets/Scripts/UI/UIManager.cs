@@ -401,7 +401,8 @@ public class UIManager : MonoBehaviour
             try
             {
                 currWin = double.Parse(text.text);
-                coin = double.Parse(TrailRendererGO.transform.parent.GetChild(textIndex).GetComponent<TMP_Text>().text) * cashCollects;
+                int multiplier=int.Parse(TrailRendererGO.transform.parent.GetChild(textIndex).GetComponent<TMP_Text>().text.Replace("x", ""));
+                coin = slotManager.currentLineBet * multiplier * cashCollects;
             }
             catch(Exception e)
             {
@@ -409,6 +410,9 @@ public class UIManager : MonoBehaviour
             }
 
             double Total = currWin + coin;
+            // Debug.Log("Coin :"+coin);
+            // Debug.Log("CurrentWin: "+currWin);
+            // Debug.Log("Total: " +Total);
             DOTween.To(()=> currWin, (val)=> currWin = val, Total, 0.3f).OnUpdate(()=>{
                 text.text=currWin.ToString("F3");
             }).WaitForCompletion();

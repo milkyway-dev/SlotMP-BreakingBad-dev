@@ -109,7 +109,7 @@ public class SlotBehaviour : MonoBehaviour
     private Coroutine LineAnimRoutine = null;
 
     int tweenHeight = 0;  //calculate the height at which tweening is done
-    private int BetCounter = 0;
+    internal int BetCounter = 0;
     protected int Lines = 30;
     private int numberOfSlots = 5;          //number of columns
     private int freeSpinsCount;
@@ -925,7 +925,7 @@ public class SlotBehaviour : MonoBehaviour
                             if(coins.index[0] == j && coins.index[1] == i)
                             {
                                 SlotImage.sprite = SlotSymbols[resultnum[i]];
-                                PopulateAnimationSprites(SlotImage.gameObject.GetComponent<ImageAnimation>(), resultnum[i], 0, coins.value.ToString("f2"));
+                                PopulateAnimationSprites(SlotImage.gameObject.GetComponent<ImageAnimation>(), resultnum[i], 0, coins.value.ToString()+"x");
                                 break;
                             }
                         }
@@ -1034,16 +1034,16 @@ public class SlotBehaviour : MonoBehaviour
     internal void WinningsTextAnimation()
     {
         if(!double.TryParse(SocketManager.playerdata.currentWining.ToString("f2"),out double winAmt)){
-            Debug.LogError("Error while conversion current winnings: " + SocketManager.playerdata.currentWining.ToString("f2"));
+            Debug.Log("Error while conversion current winnings: " + SocketManager.playerdata.currentWining.ToString("F3"));
         }
         if(!double.TryParse(Balance_text.text, out double currentBal)){
-            Debug.LogError("Error while converting string to double in current balance: " + Balance_text.text);
+            Debug.Log("Error while converting string to double in current balance: " + Balance_text.text);
         }
         if(!double.TryParse(SocketManager.playerdata.Balance.ToString("f2"), out double Balance)){
-            Debug.LogError("Error while converting string to double in new balance: " + SocketManager.playerdata.Balance.ToString("f2"));
+            Debug.Log("Error while converting string to double in new balance: " + SocketManager.playerdata.Balance.ToString("F3"));
         }
         if(!double.TryParse(TotalWin_text.text, out double currentWin)){
-            Debug.LogError("Error while converting string to double in Totalwin:" + TotalWin_text.text);
+            Debug.Log("Error while converting string to double in Totalwin:" + TotalWin_text.text);
         }
         DOTween.To(() => currentWin, (val) => currentWin = val, winAmt, 0.8f).OnUpdate(() =>
         {
