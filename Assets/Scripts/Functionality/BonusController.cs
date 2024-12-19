@@ -118,7 +118,7 @@ public class BonusController : MonoBehaviour
         }
 
         //yield return new WaitForSeconds(2f);
-        SocketManager.AccumulateResult(0);
+        SocketManager.AccumulateResult(slotManager.BetCounter);
         yield return new WaitUntil(() => SocketManager.isResultdone);
 
         yield return new WaitForSeconds(1f);
@@ -232,7 +232,7 @@ public class BonusController : MonoBehaviour
                             // Debug.Log("Setting coin frame");
                             Slot[j].slotTransforms[i].GetChild(3).GetComponent<Image>().sprite = coinFrame;
                             Slot[j].slotTransforms[i].GetChild(3).GetChild(0).gameObject.SetActive(true);
-                            Slot[j].slotTransforms[i].GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = coins.value.ToString("f2");
+                            Slot[j].slotTransforms[i].GetChild(3).GetChild(0).GetComponent<TMP_Text>().text = coins.value.ToString()+"x";
                             break;
                         }
                     }

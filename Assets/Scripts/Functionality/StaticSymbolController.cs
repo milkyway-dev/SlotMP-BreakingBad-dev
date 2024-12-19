@@ -103,7 +103,7 @@ public class StaticSymbolController : MonoBehaviour
                         //Add Value of the coins text component
                         foreach(CoinValues coin in socketManager.resultData.bonus.coins){
                             if(coin.index[0] == i && coin.index[1] == j){
-                                Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMP_Text>().text = coin.value.ToString("F2");
+                                Slot[i].slotImages[j].transform.GetChild(0).GetComponent<TMP_Text>().text = coin.value.ToString()+"x";
                                 break;
                             }
                         }
@@ -120,7 +120,7 @@ public class StaticSymbolController : MonoBehaviour
                         //Add Value of the coins text component
                         foreach(CoinValues coin in socketManager.resultData.bonus.coins){
                             if(coin.index[0] == i && coin.index[1] == j){
-                                imageAnimation.transform.GetChild(0).GetComponent<TMP_Text>().text = coin.value.ToString("F2");
+                                imageAnimation.transform.GetChild(0).GetComponent<TMP_Text>().text = coin.value.ToString()+"x";
                                 break;
                             }
                         }
@@ -145,7 +145,7 @@ public class StaticSymbolController : MonoBehaviour
                 ImageAnimation anim = Slot[i].slotImages[j].GetComponent<ImageAnimation>();
                 if (anim.isAnim)
                 {
-                    anim.AnimationSpeed = 15;
+                    anim.AnimationSpeed = 17;
                     anim.StartAnimation();
                     yield return new WaitUntil(() => anim.rendererDelegate.sprite == anim.textureArray[7]);
                     anim.transform.GetChild(0).gameObject.SetActive(true);
