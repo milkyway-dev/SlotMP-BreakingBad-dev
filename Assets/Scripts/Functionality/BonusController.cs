@@ -266,6 +266,7 @@ public class BonusController : MonoBehaviour
 
         if(SocketManager.playerdata.currentWining>0){
             uiManager.BonusWinningsCoroutine=StartCoroutine(uiManager.MidGameImageAnimation(BonusWinningsImageAnimation, SocketManager.playerdata.currentWining));
+            Debug.Log("Animation value:" + SocketManager.playerdata.currentWining);
             yield return new WaitUntil(() => uiManager.animationFinish);
             slotManager.WinningsTextAnimation();
         }
