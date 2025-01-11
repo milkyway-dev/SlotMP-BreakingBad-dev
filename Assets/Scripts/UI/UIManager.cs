@@ -6,7 +6,6 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.Networking;
 using System;
-using Best.SocketIO;
 
 public class UIManager : MonoBehaviour
 {
@@ -28,7 +27,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text BonusWinnings_Text;
     [SerializeField] private Transform BaseWinningsPosition;
     [SerializeField] private TMP_Text BaseWinnings_Text;
-
+    [SerializeField] private Button SkipWinAnimation;
     [Header("Disconnection Popup")]
     [SerializeField] private Button CloseDisconnect_Button;
     [SerializeField] private GameObject DisconnectPopup_Object;
@@ -57,6 +56,7 @@ public class UIManager : MonoBehaviour
 
     [Header("Paytable Slot Text")]
     [SerializeField] private List<TMP_Text> SymbolsText = new();
+    [SerializeField] private List<TMP_Text> SpecialSymbolsText = new();
     [SerializeField] private Button RaycastLayerButton;
 
     [Header("Game Quit Objects")]
@@ -83,10 +83,19 @@ public class UIManager : MonoBehaviour
     private bool isSound = true;
     private bool isExit = false;
     private bool isMenu = false;
-
-
+    private ImageAnimation ImageAnimation;
+    private Coroutine PopupAnimCoroutine;
+    internal Coroutine BonusCoroutine;
+    private Tween TextTween;
+    private Tween TextTween2;
+    private Tween scaleTween;
+    internal Coroutine BonusWinningsCoroutine;
+    internal bool animationFinish=false;
     private void Start()
     {
+        if(SkipWinAnimation) SkipWinAnimation.onClick.RemoveAllListeners();
+        if(SkipWinAnimation) SkipWinAnimation.onClick.AddListener(()=> SkipWinAnim());
+
         if (RaycastLayerButton) RaycastLayerButton.onClick.RemoveAllListeners();
         if (RaycastLayerButton) RaycastLayerButton.onClick.AddListener(() => CanCloseMenu());
 
@@ -147,6 +156,24 @@ public class UIManager : MonoBehaviour
 
         if (PaytableRight_Button) PaytableRight_Button.onClick.RemoveAllListeners();
         if (PaytableRight_Button) PaytableRight_Button.onClick.AddListener(()=> ChangePage(true));
+    }
+
+    void SkipWinAnim(){
+        slotManager.CheckPopups=false;
+        if (MainPopup_Object.activeInHierarchy) MainPopup_Object.SetActive(false);
+        if (WinPopup_Object.activeInHierarchy) WinPopup_Object.SetActive(false);
+        if(ImageAnimation?.currentAnimationState == ImageAnimation.ImageState.PLAYING) ImageAnimation?.StopAnimation();
+        if(PopupAnimCoroutine!=null)
+            StopCoroutine(PopupAnimCoroutine);
+        if(BonusCoroutine!=null)
+            StopCoroutine(BonusCoroutine);
+        TextTween?.Kill();
+        TextTween2.Kill();
+        scaleTween?.Kill();
+        if(BonusWinningsCoroutine!=null){
+            StopCoroutine(BonusWinningsCoroutine);
+        }
+        animationFinish=true;
     }
 
     internal void CanCloseMenu()
@@ -327,7 +354,7 @@ public class UIManager : MonoBehaviour
                 break;
         }
 
-        StartCoroutine(StartPopupAnim());
+        PopupAnimCoroutine=StartCoroutine(StartPopupAnim());
     }
 
     private IEnumerator StartPopupAnim()
@@ -341,14 +368,14 @@ public class UIManager : MonoBehaviour
         WinTextBgImage.DOScale(Vector3.one, .5f).SetEase(Ease.OutCirc);
 
         double start=0;
-        DOTween.To(()=> start, (val)=> start = val, socketManager.playerdata.currentWining, 0.8f).OnUpdate(()=>{
+        TextTween=DOTween.To(()=> start, (val)=> start = val, socketManager.playerdata.currentWining, 0.8f).OnUpdate(()=>{
             Win_Text.text = start.ToString("F3");
         });
 
         yield return new WaitUntil(()=> Winnings_ImageAnimation.textureArray[^1]==Winnings_ImageAnimation.rendererDelegate.sprite);
         Winnings_ImageAnimation.StopAnimation();
         audioController.StopWLAaudio();
-        WinTextBgImage.DOScale(Vector3.zero, .5f).SetEase(Ease.InBack).OnComplete(() => {
+        scaleTween=WinTextBgImage.DOScale(Vector3.zero, .5f).SetEase(Ease.InBack).OnComplete(() => {
             slotManager.CheckPopups = false;
             ClosePopup(WinPopup_Object);
         });
@@ -370,10 +397,11 @@ public class UIManager : MonoBehaviour
 
     internal void PopulateTopSymbolsPayout(){
         for(int i=0;i<TopPayoutTextUI.Length;i++){
-            TopPayoutTextUI[i].text=(slotManager.currentLineBet * socketManager.initialData.Jackpot[i]).ToString("F2");
+            TopPayoutTextUI[i].text=socketManager.initialData.Jackpot[i].ToString()+"x";
         }
     }
 
+    internal int multiplierCount=0;
     internal IEnumerator TrailRendererAnimation(GameObject TrailRendererGO, int textIndex, int cashCollects, bool IsBonus=false){
         TrailRenderer trail = TrailRendererGO.GetComponent<TrailRenderer>();
         TrailRendererGO.gameObject.SetActive(true);
@@ -396,25 +424,23 @@ public class UIManager : MonoBehaviour
             trail.gameObject.SetActive(false);
             trail.transform.position = tempPosi;
 
-            double currWin = 0;
-            double coin = 0;
+            // double currWin = 0;
+            int multiplier=0;
             try
             {
-                currWin = double.Parse(text.text);
-                int multiplier=int.Parse(TrailRendererGO.transform.parent.GetChild(textIndex).GetComponent<TMP_Text>().text.Replace("x", ""));
-                coin = slotManager.currentLineBet * multiplier * cashCollects;
+                // currWin = double.Parse(text.text);
+                multiplier=int.Parse(TrailRendererGO.transform.parent.GetChild(textIndex).GetComponent<TMP_Text>().text.Replace("x", ""));
+                multiplierCount+=multiplier;
+                // coin = slotManager.currentLineBet * multiplier * cashCollects;
             }
             catch(Exception e)
             {
                 Debug.Log(e.Message);
             }
 
-            double Total = currWin + coin;
-            // Debug.Log("Coin :"+coin);
-            // Debug.Log("CurrentWin: "+currWin);
-            // Debug.Log("Total: " +Total);
-            DOTween.To(()=> currWin, (val)=> currWin = val, Total, 0.3f).OnUpdate(()=>{
-                text.text=currWin.ToString("F3");
+            // double Total = currWin + coin;
+            DOTween.To(()=> multiplier, (val)=> multiplier = val, multiplierCount, 0.3f).OnUpdate(()=>{
+                text.text=multiplier.ToString()+"x";
             }).WaitForCompletion();
         });
         yield return new WaitForSeconds(1f);
@@ -422,9 +448,20 @@ public class UIManager : MonoBehaviour
 
     internal IEnumerator MidGameImageAnimation(ImageAnimation imageAnimation, double num = 0)
     {
-        imageAnimation.transform.parent.gameObject.SetActive(true);
+        animationFinish=false;
+        if (imageAnimation.name == "FreeSpinsImageAnimation"){
+            imageAnimation.transform.parent.gameObject.SetActive(true);
+        }
+        else if(imageAnimation.name == "BonusWonImageAnimation"){
+            MainPopup_Object.SetActive(true);
+            WinPopup_Object.SetActive(true);
+        }
+        else{
+            imageAnimation.transform.parent.gameObject.SetActive(true);
+        }
         imageAnimation.gameObject.SetActive(true);
         imageAnimation.StartAnimation();
+        ImageAnimation = imageAnimation;
 
         TMP_Text text = null;
         bool useF2=false;
@@ -445,7 +482,7 @@ public class UIManager : MonoBehaviour
             text.DOFade(1, 0.5f);
 
             double start = 0;
-            yield return DOTween.To(()=> start, (val)=> start = val, num, 0.8f).OnUpdate(()=>{
+            TextTween2=DOTween.To(()=> start, (val)=> start = val, num, 0.8f).OnUpdate(()=>{
                 if(useF2){
                     text.text = start.ToString("F3");
                 }
@@ -453,14 +490,27 @@ public class UIManager : MonoBehaviour
                     text.text = ((int)start).ToString();
                 }
             });
+            yield return TextTween2; 
         }
 
         yield return new WaitUntil(() => imageAnimation.rendererDelegate.sprite == imageAnimation.textureArray[^1]);
-        imageAnimation.transform.parent.gameObject.SetActive(false);
+        
         if(text!=null) text.DOFade(0, 0.5f);
         if(audio) audioController.StopWLAaudio();
         imageAnimation.StopAnimation();
-        imageAnimation.gameObject.SetActive(false);
+        ImageAnimation = null;
+        if (imageAnimation.name == "FreeSpinsImageAnimation"){
+            imageAnimation.transform.parent.gameObject.SetActive(false);
+
+        }
+        else if(imageAnimation.name == "BonusWonImageAnimation"){
+            MainPopup_Object.SetActive(false);
+            WinPopup_Object.SetActive(false);
+        }
+        else{
+            imageAnimation.transform.parent.gameObject.SetActive(false);
+        }
+        animationFinish=true;
     }
 
     private void PopulateSymbolsPayout(Paylines paylines)
@@ -470,17 +520,23 @@ public class UIManager : MonoBehaviour
             string text = null;
             if (paylines.symbols[i].Multiplier[0][0] != 0)
             {
-                text += "5x - " + paylines.symbols[i].Multiplier[0][0];
+                text += "5x - " + paylines.symbols[i].Multiplier[0][0] + "x";
             }
             if (paylines.symbols[i].Multiplier[1][0] != 0)
             {
-                text += "\n4x - " + paylines.symbols[i].Multiplier[1][0];
+                text += "\n4x - " + paylines.symbols[i].Multiplier[1][0] + "x";
             }
             if (paylines.symbols[i].Multiplier[2][0] != 0)
             {
-                text += "\n3x - " + paylines.symbols[i].Multiplier[2][0];
+                text += "\n3x - " + paylines.symbols[i].Multiplier[2][0] + "x";
             }
             if (SymbolsText[i]) SymbolsText[i].text = text;
+        }
+
+        int j=0;
+        for(int i = 10; i<=16 ; i++){
+            SpecialSymbolsText[j].text=paylines.symbols[i].description.ToString();
+            j++;
         }
     }
 
