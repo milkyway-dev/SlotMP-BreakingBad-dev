@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using TMPro;
 using DG.Tweening;
 using System.Linq;
-using UnityEngine.UI.Extensions;
 
 public class BonusController : MonoBehaviour
 {
@@ -48,14 +47,16 @@ public class BonusController : MonoBehaviour
     private List<KeyValuePair<Transform, Tweener>> singleSlotTweens = new List<KeyValuePair<Transform, Tweener>>();
     private int IconSizeFactor = 202;
     private bool IsSpinning;
-
+    private bool BonusEnd=false;
+    private Coroutine BonusRoutine;
+    private float SpinDelay=1f;
     private void Start()
     {
-        if (BonusSlotStart_Button)
-        {
-            BonusSlotStart_Button.onClick.RemoveAllListeners();
-            BonusSlotStart_Button.onClick.AddListener(StartBonusSlot);
-        }
+        // if (BonusSlotStart_Button)
+        // {
+        //     BonusSlotStart_Button.onClick.RemoveAllListeners();
+        //     BonusSlotStart_Button.onClick.AddListener(StartBonusSlot);
+        // }
 
         ResetMatrix();
     }
@@ -82,6 +83,15 @@ public class BonusController : MonoBehaviour
         });
     }
 
+    internal IEnumerator StartBonusLoop(){
+        BonusEnd=false;
+        while(!BonusEnd){
+            StartBonusSlot();
+            yield return BonusRoutine;
+            yield return new WaitForSeconds(SpinDelay);
+        }
+    }
+
     private void StartBonusSlot()
     {
         if (audioController) audioController.PlaySpinButtonAudio();
@@ -98,7 +108,7 @@ public class BonusController : MonoBehaviour
             BonusSpinCounter_Text.text = spinCount.ToString();
         }
 
-        StartCoroutine(BonusTweenRoutine());
+        BonusRoutine=StartCoroutine(BonusTweenRoutine());
     }
 
     private IEnumerator BonusTweenRoutine()
@@ -153,6 +163,7 @@ public class BonusController : MonoBehaviour
 
         if(SocketManager.playerdata.currentWining>0)
         {
+            BonusEnd=true;
             yield return new WaitForSeconds(0.5f);
             if(SocketManager.resultData.bonus.isWalterStash){
                 Debug.Log("Triggering walter stash payout");
@@ -162,7 +173,7 @@ public class BonusController : MonoBehaviour
                     double start = 0;
                     double MajorJackpotWinning=SocketManager.initialData.Jackpot[0]*slotManager.currentLineBet;
                     DOTween.To(()=> start, (val)=> start = val, MajorJackpotWinning, 0.3f).OnUpdate(()=>{
-                        BonusWinnings_Text.text = start.ToString("F2");
+                        BonusWinnings_Text.text = start.ToString("F3");
                     }).WaitForCompletion();
                 })
                 .WaitForCompletion();
@@ -181,6 +192,7 @@ public class BonusController : MonoBehaviour
                 }
             }
 
+            uiManager.multiplierCount=0;
             for(int i = 0; i < Slot.Count; i++)
             {
                 for(int j = 0; j < Slot[i].slotTransforms.Count; j++)
@@ -207,7 +219,7 @@ public class BonusController : MonoBehaviour
 
         yield return new WaitForSeconds(2f);
 
-        BonusSlotStart_Button.interactable = true;
+        BonusSlotStart_Button.interactable = false;
         IsSpinning = false;
     }
 
@@ -253,7 +265,8 @@ public class BonusController : MonoBehaviour
         BonusSlotStart_Button.interactable = false;
 
         if(SocketManager.playerdata.currentWining>0){
-            yield return uiManager.MidGameImageAnimation(BonusWinningsImageAnimation, SocketManager.playerdata.currentWining);
+            uiManager.BonusWinningsCoroutine=StartCoroutine(uiManager.MidGameImageAnimation(BonusWinningsImageAnimation, SocketManager.playerdata.currentWining));
+            yield return new WaitUntil(() => uiManager.animationFinish);
             slotManager.WinningsTextAnimation();
         }
         WinningsUI_Panel.DOFade(0, 0.3f);
@@ -266,12 +279,27 @@ public class BonusController : MonoBehaviour
             if (SocketManager.resultData.freeSpins.count <= 0)
             {
                 slotManager.CloseFreeSpinsUI();
+                if(slotManager.WasAutoSpinOn){
+                    DOVirtual.DelayedCall(0.2f, ()=> {
+                        NormalSlotStart_Button.interactable=false;
+                        NormalSlotStart_Button.gameObject.SetActive(true);
+                        slotManager.AutoSpin();
+                        }); 
+                    
+                }   
+                else{
+                    NormalSlotStart_Button.interactable=false;
+                    NormalSlotStart_Button.gameObject.SetActive(true);
+                    slotManager.ToggleButtonGrp(true);
+                }
             }
             else
             {
-                slotManager.OpenFreeSpinsUI();
+                DOVirtual.DelayedCall(0.5f, ()=>{
+                    slotManager.OpenFreeSpinsUI();
+                    slotManager.FreeSpin(SocketManager.resultData.freeSpins.count);
+                });
             }
-            slotManager.ToggleButtonGrp(true);
             staticSymbol.Reset();
             ResetMatrix();
         });
