@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
 using TMPro;
 
 public class StaticSymbolController : MonoBehaviour
@@ -11,6 +10,7 @@ public class StaticSymbolController : MonoBehaviour
     [Header("Scripts References")]
     [SerializeField] private SocketIOManager socketManager;
     [SerializeField] private SlotBehaviour slotManager;
+    [SerializeField] private BonusController bonusController;
 
     [Header("Slots Reference")]
     [SerializeField] public List<SlotImage> Slot;
@@ -157,8 +157,8 @@ public class StaticSymbolController : MonoBehaviour
         }
 
         yield return new WaitForSeconds(1f);
-
-        button.interactable = true;
+        StartCoroutine(bonusController.StartBonusLoop());
+        // button.interactable = false;
     }
 
     internal void Reset()
