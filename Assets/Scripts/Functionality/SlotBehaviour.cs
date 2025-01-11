@@ -1126,9 +1126,8 @@ public class SlotBehaviour : MonoBehaviour
 
     internal void WinningsTextAnimation()
     {
-        if(!double.TryParse(SocketManager.playerdata.currentWining.ToString("f3"),out double winAmt)){
-            Debug.Log("Error while conversion current winnings: " + SocketManager.playerdata.currentWining.ToString("F3"));
-        }
+        double winAmt=SocketManager.playerdata.currentWining;
+        Debug.Log("Text Animation Value:"+SocketManager.playerdata.currentWining);
         if(!double.TryParse(Balance_text.text, out double currentBal)){
             Debug.Log("Error while converting string to double in current balance: " + Balance_text.text);
         }
