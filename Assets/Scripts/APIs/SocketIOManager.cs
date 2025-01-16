@@ -27,11 +27,11 @@ public class SocketIOManager : MonoBehaviour
     //protected string TestSocketURI = "https://6f01c04j-5000.inc1.devtunnels.ms/";
     //protected string TestSocketURI = "https://7p68wzhv-5000.inc1.devtunnels.ms/"; //vikings
     //protected string TestSocketURI = "https://916smq0d-5001.inc1.devtunnels.ms/";
-    protected string TestSocketURI = "http://localhost:5001/";
+    protected string TestSocketURI = "http://localhost:5000/";
     [SerializeField]
     private string testToken;
-    protected string gameID = "SL-BB";
-    // protected string gameID = "";
+    //protected string gameID = "SL-BB";
+     protected string gameID = "";
     internal bool isLoaded = false;
     internal bool SetInit = false;
     private const int maxReconnectionAttempts = 6;

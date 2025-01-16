@@ -49,7 +49,7 @@ public class BonusController : MonoBehaviour
     private bool IsSpinning;
     private bool BonusEnd=false;
     private Coroutine BonusRoutine;
-    private float SpinDelay=1f;
+    private float SpinDelay=0.2f;
     private void Start()
     {
         // if (BonusSlotStart_Button)
@@ -130,8 +130,6 @@ public class BonusController : MonoBehaviour
         //yield return new WaitForSeconds(2f);
         SocketManager.AccumulateResult(slotManager.BetCounter);
         yield return new WaitUntil(() => SocketManager.isResultdone);
-
-        yield return new WaitForSeconds(1f);
 
         // Create a list of all slot indices for randomization
         List<(int row, int col)> indices = new List<(int, int)>();
@@ -217,7 +215,7 @@ public class BonusController : MonoBehaviour
             }
         }
 
-        yield return new WaitForSeconds(2f);
+
 
         BonusSlotStart_Button.interactable = false;
         IsSpinning = false;
@@ -323,7 +321,7 @@ public class BonusController : MonoBehaviour
     {
         Tweener tweener = null;
 
-        slotTransform.localPosition = new Vector2(slotTransform.localPosition.x, slotTransform.localPosition.y + 442);
+        slotTransform.localPosition = new Vector2(slotTransform.localPosition.x, 307f);
         tweener = slotTransform.DOLocalMoveY(-670, .3f).SetLoops(-1, LoopType.Restart).SetEase(Ease.Linear).SetDelay(0);
 
         tweener.Play();
@@ -352,9 +350,10 @@ public class BonusController : MonoBehaviour
         // Pause the tween
         tweenPair.Value.Pause();
 
+        slotTransform.localPosition = new Vector2(slotTransform.localPosition.x, 307f);
         // Calculate the position and stop tweening at the required position
         int tweenpos = (reqpos * IconSizeFactor) - IconSizeFactor;
-        Tweener stopTween = slotTransform.DOLocalMoveY(tweenpos - 290.5f, 0.5f);
+        Tweener stopTween = slotTransform.DOLocalMoveY(tweenpos - 290.5f, 0.1f);
 
         if (audioController) audioController.PlayWLAudio("spinStop");
 
