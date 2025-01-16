@@ -168,10 +168,10 @@ public class BonusController : MonoBehaviour
                 Vector3 tempPosi = GrandPayoutTRTransform.localPosition;
                 GrandPayoutTRTransform.gameObject.SetActive(true);
                 yield return GrandPayoutTRTransform.DOLocalMove(BonusWinningsPosition.localPosition, 0.5f).OnComplete(()=>{
-                    double start = 0;
-                    double MajorJackpotWinning=SocketManager.initialData.Jackpot[0]*slotManager.currentLineBet;
+                    int start = 0;
+                    int MajorJackpotWinning=(int)SocketManager.initialData.Jackpot[0];
                     DOTween.To(()=> start, (val)=> start = val, MajorJackpotWinning, 0.3f).OnUpdate(()=>{
-                        BonusWinnings_Text.text = start.ToString("F3");
+                        BonusWinnings_Text.text = start.ToString()+"x";
                     }).WaitForCompletion();
                 })
                 .WaitForCompletion();
@@ -190,7 +190,7 @@ public class BonusController : MonoBehaviour
                 }
             }
 
-            uiManager.multiplierCount=0;
+            uiManager.multiplierCount=!SocketManager.resultData.bonus.isWalterStash?0:int.Parse(BonusWinnings_Text.text.Replace("x",""));
             for(int i = 0; i < Slot.Count; i++)
             {
                 for(int j = 0; j < Slot[i].slotTransforms.Count; j++)
