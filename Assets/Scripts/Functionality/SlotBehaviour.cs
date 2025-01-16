@@ -195,6 +195,9 @@ public class SlotBehaviour : MonoBehaviour
         {
             StartSlots();
             yield return tweenroutine;
+            // if(IsBonus){
+            //     yield return new WaitUntil(()=> !IsBonus);
+            // }
             yield return new WaitForSeconds(SpinDelay);
             i++;
         }
@@ -611,6 +614,7 @@ public class SlotBehaviour : MonoBehaviour
     //manage the Routine for spinning of the slots
     private IEnumerator TweenRoutine()
     {
+        bool winningsDisplayed=false;
         if (currentBalance < currentTotalBet && !IsFreeSpin) // Check if balance is sufficient to place the bet
         {
             CompareBalance();
@@ -761,6 +765,15 @@ public class SlotBehaviour : MonoBehaviour
 
         if (SocketManager.resultData.freeSpins.isNewAdded)
         {
+            if(SocketManager.playerdata.currentWining>0 && !winningsDisplayed){
+                winningsDisplayed=true;
+                CheckPopups = true;
+                WinningsTextAnimation();
+                CheckWinPopups();
+
+                yield return new WaitUntil(()=> !CheckPopups);
+                yield return new WaitForSeconds(.5f);
+            }
             yield return ResetUI();
 
             OpenFreeSpinsUI();
@@ -792,17 +805,24 @@ public class SlotBehaviour : MonoBehaviour
 
         if (SocketManager.resultData.bonus.isBonus)
         {
-            if(SocketManager.playerdata.currentWining>0){
+            if(SocketManager.playerdata.currentWining>0 && !winningsDisplayed){
+                winningsDisplayed=true;
                 CheckPopups = true;
                 WinningsTextAnimation();
                 CheckWinPopups();
 
                 yield return new WaitUntil(()=> !CheckPopups);
-                yield return new WaitForSeconds(2f);
+                yield return new WaitForSeconds(.5f);
             }
             IsBonus=true;
             yield return ResetUI();
-
+            if(IsFreeSpin){
+                if (FreeSpinRoutine != null)
+                {
+                    StopCoroutine(FreeSpinRoutine);
+                    FreeSpinRoutine = null;
+                }
+            }
             yield return new WaitForSeconds(.5f);
             // Only Bonus is awarded without Free Spins, directly trigger bonus round
             uiManager.BonusCoroutine = StartCoroutine(uiManager.MidGameImageAnimation(BonusImageAnimation));
@@ -818,7 +838,8 @@ public class SlotBehaviour : MonoBehaviour
         }
 
 
-        if(SocketManager.playerdata.currentWining>0){
+        if(SocketManager.playerdata.currentWining>0 && !winningsDisplayed){
+            winningsDisplayed=true;
             CheckPopups = true;
             WinningsTextAnimation();
             CheckWinPopups();

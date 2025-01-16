@@ -31,7 +31,7 @@ public class SocketIOManager : MonoBehaviour
     [SerializeField]
     private string testToken;
     protected string gameID = "SL-BB";
-    // protected string gameID = "";
+    //  protected string gameID = "";
     internal bool isLoaded = false;
     internal bool SetInit = false;
     private const int maxReconnectionAttempts = 6;

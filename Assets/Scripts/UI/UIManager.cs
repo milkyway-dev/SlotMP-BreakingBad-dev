@@ -368,7 +368,8 @@ public class UIManager : MonoBehaviour
         WinTextBgImage.DOScale(Vector3.one, .5f).SetEase(Ease.OutCirc);
 
         double start=0;
-        TextTween=DOTween.To(()=> start, (val)=> start = val, socketManager.playerdata.currentWining, 0.8f).OnUpdate(()=>{
+        double winning = socketManager.playerdata.currentWining;
+        TextTween =DOTween.To(()=> start, (val)=> start = val, socketManager.playerdata.currentWining, 0.8f).OnUpdate(()=>{
             Win_Text.text = start.ToString("F3");
         });
 
@@ -425,7 +426,7 @@ public class UIManager : MonoBehaviour
             trail.transform.position = tempPosi;
 
             // double currWin = 0;
-            int multiplier=0;
+            int multiplier = 0;
             try
             {
                 // currWin = double.Parse(text.text);
@@ -437,10 +438,10 @@ public class UIManager : MonoBehaviour
             {
                 Debug.Log(e.Message);
             }
-
+            int start = int.Parse(text.text.Replace("x", ""));
             // double Total = currWin + coin;
-            DOTween.To(()=> multiplier, (val)=> multiplier = val, multiplierCount, 0.3f).OnUpdate(()=>{
-                text.text=multiplier.ToString()+"x";
+            DOTween.To(()=> start, (val)=> start = val, multiplierCount, 0.3f).OnUpdate(()=>{
+                text.text= start.ToString()+"x";
             }).WaitForCompletion();
         });
         yield return new WaitForSeconds(1f);
